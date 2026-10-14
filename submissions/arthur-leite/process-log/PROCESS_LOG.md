@@ -110,3 +110,34 @@ Scripts: `solution/03-prototipo/benchmark/` (`embed_ds2.py`, `llm_classify.py`, 
 - A: 86,0% de acurácia, F1-macro 0,86, custo zero, 0,04 ms por ticket.
 - B: 80,8% de acurácia (pior que A: o texto pré-processado e sem stopwords favorece palavras-chave).
 - C: o LLM ficou em 44% (zero-shot) e 48% (few-shot) com flash-lite. **Hipótese:** as categorias são convenções internas da organização ("Miscellaneous", "Internal Project"), que um LLM não tem como adivinhar. Um modelo mais forte (gemini-3.5-flash) está rodando para garantir que a comparação seja justa e não um espantalho.
+
+### 3.1 Revisão pelo agente juiz (benchmark + ROI)
+Parecer: `process-log/revisoes/fase3_benchmark_roi_parecer.md`. Todos os números foram recalculados e **conferem**. As ressalvas mudaram a narrativa:
+
+| Ponto | O que o juiz mostrou | O que mudei |
+|---|---|---|
+| Faixa auto com 95,1% | IC95% de 94,6 a 95,9%: cerca de 20% de chance de ficar abaixo da meta. Hardware em 92,6%; 12% dos tickets de Admin rights vão sozinhos para Hardware | **Limiar por categoria** (Hardware sobe para 0,78) → faixa auto com 96,4% |
+| "LLM perde por ~40 pontos" | O teste favorece o modelo local (flash-lite, texto pré-processado, só o nome das categorias) | Redação qualificada. Rodando também `gemini-3.8-flash`, o modelo mais forte disponível, para não comparar com um espantalho |
+| ROI: erro de roteamento de 15% → 7,5% | **Não demonstrado.** O erro da IA é medido contra o rótulo humano; o "15%" é taxa de transferência de mercado, que inclui escalonamentos legítimos | **Removido do número principal.** No app, virou uma hipótese opcional, desligada por padrão |
+| Faixa "sugere": humano erra igual a hoje | Não é conservador: com ancoragem na 1ª sugestão, o erro chega a 38% | O cálculo opcional usa o pior caso de ancoragem |
+| R$ 57 mil/ano | Benefício bruto, sem custo de implantação; é tempo, não caixa | Linguagem trocada para "tempo liberado bruto", com faixa entre cenários |
+| Premissa de 3 min de triagem | Responde por 84% do resultado e tem fonte fraca | Explicitado; vira o **1º item medido no piloto** |
+
+**Número final:** 552 a 2.106 h/ano de tempo liberado (base: 1.218 h ≈ 0,7 pessoa ≈ R$ 47 mil). É menor que a 1ª versão (1.496 h), porém defensável.
+
+---
+
+## Fase 4 — Protótipo "Triage Copilot" (Streamlit)
+
+Código: `solution/03-prototipo/` (`app.py`, `src/triagem.py`, `src/politica.py`, `src/llm.py`, `src/roi.py`).
+
+### Problemas encontrados ao testar e corrigidos
+1. **A confiança não detecta ticket fora do domínio.** Testei o modelo de TI nos tickets de cliente do Dataset 1: **43%** seriam roteados automaticamente "com confiança". Criei uma trava de similaridade com o vizinho mais próximo no histórico. Limiar de 0,20: barra 82% dos tickets fora do domínio e 9,5% dos normais. Antes de concluir, igualei o pré-processamento do Dataset 1 ao do Dataset 2, para não favorecer o teste.
+2. **Texto em português passou pela trava.** Com uma única palavra conhecida ("status"), a similaridade era alta. Adicionei uma 2ª trava: a fração das palavras que o modelo reconhece (mínimo 50%).
+3. **Phishing foi roteado automaticamente para Access.** A política detectava o alerta, mas não sobrepunha a decisão. Agora a política sempre vence: segurança vai para a fila de Segurança, com escalonamento.
+4. **O rascunho do LLM inverteu o sentido** ("not detected" virou "was detected"), porque recebia o texto pré-processado, sem stopwords (e "not" é stopword). Agora o LLM recebe o texto original.
+
+### Decisões de produto baseadas em dados
+- **Rotear ≠ executar ≠ responder.** A política de "não automatizar" é por regras explícitas, não pela categoria, porque no Dataset 2 os temas sensíveis cruzam as categorias (ex.: segurança cai 41% em Hardware, 19% em Admin rights e 17% em Access). 27,7% dos tickets acionam alguma regra (a execução exige humano); 2,7% bloqueiam o rascunho por LLM (saúde/LGPD, segurança); 8,1% são escalados.
+- **As categorias não significam o que o nome diz.** Os termos mais fortes de "Administrative rights" são *outlook, upgrade, install, windows*: instalação de software. Isso ajuda a explicar a dificuldade do LLM.
+- **Motor final, no teste:** 65,5% automático (96,4% de acerto) · 23,3% sugestão (a certa está entre as 2 em 91%) · 11,2% humano.

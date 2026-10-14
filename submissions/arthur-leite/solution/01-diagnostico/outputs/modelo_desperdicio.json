@@ -1,0 +1,74 @@
+{
+  "cenarios": {
+    "Conservador": {
+      "triagem_min": 1.5,
+      "erro_roteamento": 0.1,
+      "min_por_erro": 2.8
+    },
+    "Base": {
+      "triagem_min": 3.0,
+      "erro_roteamento": 0.15,
+      "min_por_erro": 3.9
+    },
+    "Otimista": {
+      "triagem_min": 5.0,
+      "erro_roteamento": 0.25,
+      "min_por_erro": 4.9
+    }
+  },
+  "resultado": {
+    "Conservador": {
+      "horas_atual": 890.0,
+      "horas_triagem": 750.0,
+      "horas_retrabalho": 140.0,
+      "horas_com_ia": 223.4555900000001,
+      "horas_recuperaveis": 666.54441,
+      "fte": 0.3814929086538461,
+      "reais_ano": 25486.167852692306,
+      "erro_roteamento_atual": 0.1,
+      "erro_roteamento_ia": 0.06210935000000005
+    },
+    "Base": {
+      "horas_atual": 1792.5,
+      "horas_triagem": 1500.0,
+      "horas_retrabalho": 292.5,
+      "horas_com_ia": 296.0944825000001,
+      "horas_recuperaveis": 1496.4055174999999,
+      "fte": 0.8564592018658423,
+      "reais_ano": 57216.95602353021,
+      "erro_roteamento_atual": 0.15,
+      "erro_roteamento_ia": 0.07503435000000004
+    },
+    "Otimista": {
+      "horas_atual": 3112.5,
+      "horas_triagem": 2500.0,
+      "horas_retrabalho": 612.5,
+      "horas_com_ia": 414.6441575000001,
+      "horas_recuperaveis": 2697.8558425,
+      "fte": 1.5441024739583333,
+      "reais_ano": 103155.92751625001,
+      "erro_roteamento_atual": 0.25,
+      "erro_roteamento_ia": 0.10088435000000004
+    }
+  },
+  "faixas": {
+    "limiar_auto": 0.7085,
+    "limiar_sugere": 0.3543,
+    "auto": {
+      "cobertura": 0.7415,
+      "precisao": 0.9511,
+      "top2": 0.9904
+    },
+    "sugere": {
+      "cobertura": 0.2408,
+      "precisao": 0.6176,
+      "top2": 0.9028
+    },
+    "humano": {
+      "cobertura": 0.0177,
+      "precisao": 0.355,
+      "top2": 0.6864
+    }
+  },
+  "custo_hora": 38.23626373626374
+}
