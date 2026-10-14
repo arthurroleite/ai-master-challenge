@@ -41,3 +41,32 @@ Cada entrada registra o que decidi, o papel da IA, onde a IA errou ou foi corrig
 | Dataset 2 | 47.837 textos em 8 classes, **desbalanceadas** (Hardware 13.617 × Administrative rights 1.760) |
 
 Próximo passo: Fase 1, auditoria completa da qualidade dos dados.
+
+---
+
+## Fase 1 — Auditoria de qualidade dos dados (2026-10-14)
+
+Script reproduzível: `solution/01-diagnostico/01_auditoria_dados.py`. Saída: `solution/01-diagnostico/outputs/auditoria.md`.
+
+### Como decompus
+Antes de responder "onde o fluxo trava", perguntei se os dados conseguem responder isso. Para cada campo, testei se ele carrega informação:
+1. O texto é real ou template?
+2. Os tempos são tempos?
+3. As variáveis se relacionam entre si, como numa operação real (ex.: Critical deveria ter fluxo diferente de Low)?
+4. Alguma variável explica o CSAT?
+
+### Resultado: o Dataset 1 é aleatório
+- **100%** das descrições têm placeholder não preenchido; só existem **16** frases de abertura.
+- Os "tempos" são timestamps concentrados numa janela de **27 horas**, e em **49%** dos tickets fechados a resolução acontece *antes* da primeira resposta.
+- O CSAT é **uniforme** de 1 a 5 (p = 0,80).
+- **Nenhum par de variáveis tem associação** (maior Cramér's V = 0,072). O tipo do ticket é independente do assunto: há "Billing inquiry" com assunto "Hardware issue".
+- **Nada explica o CSAT**: canal, prioridade, tipo, produto, duração e idade têm todos p > 0,25.
+
+### Resultado: o Dataset 2 é real
+- Texto real de e-mails de TI, pré-processado e anonimizado, com rótulos coerentes e desbalanceados. Serve para treinar e avaliar classificadores de verdade.
+
+### Onde a IA (e o baseline) erraria
+Se eu colasse o brief num LLM, ele responderia "Critical demora mais, chat tem melhor CSAT, reduzir o tempo de primeira resposta aumenta a satisfação". Testei isso: **as diferenças entre grupos estão dentro do ruído** (ex.: a mediana de "duração" é 6,0 h para Critical e 7,1 h para Low, num dado em que metade das durações é negativa). Qualquer "insight" desse tipo seria inventado.
+
+### Decisão (pendente de validação com o Arthur)
+Mudar o enquadramento do diagnóstico: o primeiro gargalo é **de medição**. A entrega vai mostrar o que dá para afirmar, o que não dá, e o que precisaria ser instrumentado. Os números de desperdício serão construídos a partir de volume × premissas explícitas e ajustáveis, nunca a partir das durações falsas.
