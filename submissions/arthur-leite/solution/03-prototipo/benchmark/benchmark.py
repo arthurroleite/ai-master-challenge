@@ -145,6 +145,25 @@ def main() -> None:
         if validas < 1:
             md.append(f"| ↳ respostas fora das categorias válidas | | {1 - validas:.1%} | | | |")
 
+    # --- Referência sem LLM: voto dos 5 vizinhos mais parecidos do treino (o mesmo contexto que o modo rag recebe) ---
+    from sklearn.neighbors import NearestNeighbors
+    amostra, _ = train_test_split(te, train_size=400, stratify=te["Topic_group"], random_state=7)
+    vec_k = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
+    tr_k = pd.concat([tr, va])  # o modo rag busca vizinhos em todo o conjunto não-teste
+    nn = NearestNeighbors(n_neighbors=5, metric="cosine").fit(vec_k.fit_transform(tr_k["Document"]))
+    viz = nn.kneighbors(vec_k.transform(amostra["Document"]))[1]
+    voto = [tr_k["Topic_group"].iloc[v].mode()[0] for v in viz]
+    md.append(f"| kNN-5 (voto dos 5 mais parecidos, sem LLM) | {len(amostra)} | {accuracy_score(amostra['Topic_group'], voto):.3f} | "
+              f"{f1_score(amostra['Topic_group'], voto, average='macro'):.3f} | 0 | <0,01 |")
+    md += ["", "**Notas de método (revisadas pelo agente juiz):**",
+           "- O teste do LLM favorece o modelo local: texto já pré-processado (sem sintaxe), categorias dadas só pelo nome e plano gratuito do Gemini.",
+           "- `rag` = cada ticket vai ao LLM com os 5 tickets de treino mais parecidos, já rotulados (o melhor cenário testado para o LLM). "
+           "Um id não voltou na resposta de um lote (399/400): o LLM não garante devolver todos os ids.",
+           "- `gemini-3.8-flash` (o modelo mais forte disponível) parou em 200 tickets por cota diária do plano gratuito; o modelo A foi comparado nos mesmos 200.",
+           "- Diferenças pareadas (teste de McNemar, mesmos tickets): A × rag → A acerta 53 que o LLM erra e erra 21 que o LLM acerta (p = 0,0003); "
+           "A × 3.8-flash → 70 × 7 (p < 10⁻¹³). Os 21 acertos exclusivos do rag sugerem testar o LLM como 'segunda opinião' na faixa de sugestão (não testado).",
+           "- As respostas brutas do LLM estão em `outputs/llm_respostas/`."]
+
     # --- Faixas de automação ---
     md += ["", "## 3. Faixas de automação (limiares escolhidos na validação, medidos no teste)", "",
            f"Regra: **auto** quando a 1ª categoria acerta ≥ {PRECISAO_AUTO:.0%}; **sugere** (humano escolhe entre 2) quando a certa está entre as 2 primeiras ≥ {TOP2_SUGERE:.0%}; abaixo disso, **humano** classifica do zero.", "",

@@ -203,10 +203,11 @@ ticket entra
             └─ ação sensível (aprovar, conceder, revogar) → sempre humano
 ```
 ### Por que não um LLM para classificar?
-No mesmo conjunto de tickets, o Gemini acertou **44–48%** e o modelo simples, **85%**. As categorias são **convenções internas**
+No mesmo conjunto de tickets, o modelo simples acertou **85%**. O Gemini acertou **44–54%** sozinho e **77%** quando recebeu
+os 5 tickets mais parecidos do histórico no prompt (RAG). As categorias são **convenções internas**
 (os termos que mais pesam em "Administrative rights" são *outlook, upgrade, install, windows*: instalação de software; em
 "Miscellaneous", *change, approval, groups*). Um modelo genérico
-não tem como saber isso; o histórico da empresa sabe. Bônus: custo zero por ticket e nenhum dado sai da empresa. O LLM fica onde ele é bom: **redigir**.
+não tem como saber isso; o histórico da empresa sabe, e o LLM só se aproxima quando recebe esse histórico. Bônus: custo zero por ticket e nenhum dado sai da empresa. O LLM fica onde ele é bom: **redigir**.
 Benchmark completo: `benchmark/outputs/benchmark.md`.
 
 ### O que NÃO automatizamos

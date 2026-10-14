@@ -6,8 +6,8 @@ Treino 33,485 · Validação 4,784 · Teste 9,568 (estratificado, seed 42)
 
 | Modelo | Acurácia | F1-macro | Treino | Latência/ticket |
 |---|---|---|---|---|
-| A. TF-IDF + Regressão Logística | 0.860 | 0.860 | 27 s | 0.04 ms |
-| B. Embeddings MiniLM + Regressão Logística | 0.808 | 0.813 | 4 s | ver nota |
+| A. TF-IDF + Regressão Logística | 0.860 | 0.860 | 29 s | 0.04 ms |
+| B. Embeddings MiniLM + Regressão Logística | 0.808 | 0.813 | 5 s | ver nota |
 
 ## 2. Amostra de 400 tickets do teste (comparação com LLM)
 
@@ -16,9 +16,23 @@ Treino 33,485 · Validação 4,784 · Teste 9,568 (estratificado, seed 42)
 | C. gemini-3.5-flash-lite_few-shot | 400 | 0.480 | 0.490 | 117 | 0.31 |
 | A na mesma amostra | 400 | 0.850 | 0.864 | 0 | <0,01 |
 | B na mesma amostra | 400 | 0.782 | 0.786 | 0 | <0,01 |
+| C. gemini-3.5-flash-lite_rag | 399 | 0.769 | 0.773 | 238 | 0.12 |
+| A na mesma amostra | 399 | 0.850 | 0.864 | 0 | <0,01 |
+| B na mesma amostra | 399 | 0.782 | 0.785 | 0 | <0,01 |
 | C. gemini-3.5-flash-lite_zero-shot | 400 | 0.440 | 0.412 | 77 | 0.09 |
 | A na mesma amostra | 400 | 0.850 | 0.864 | 0 | <0,01 |
 | B na mesma amostra | 400 | 0.782 | 0.786 | 0 | <0,01 |
+| C. gemini-3.8-flash_few-shot | 200 | 0.535 | 0.521 | 120 | 3.93 |
+| A na mesma amostra | 200 | 0.850 | 0.837 | 0 | <0,01 |
+| B na mesma amostra | 200 | 0.800 | 0.778 | 0 | <0,01 |
+| kNN-5 (voto dos 5 mais parecidos, sem LLM) | 400 | 0.733 | 0.724 | 0 | <0,01 |
+
+**Notas de método (revisadas pelo agente juiz):**
+- O teste do LLM favorece o modelo local: texto já pré-processado (sem sintaxe), categorias dadas só pelo nome e plano gratuito do Gemini.
+- `rag` = cada ticket vai ao LLM com os 5 tickets de treino mais parecidos, já rotulados (o melhor cenário testado para o LLM). Um id não voltou na resposta de um lote (399/400): o LLM não garante devolver todos os ids.
+- `gemini-3.8-flash` (o modelo mais forte disponível) parou em 200 tickets por cota diária do plano gratuito; o modelo A foi comparado nos mesmos 200.
+- Diferenças pareadas (teste de McNemar, mesmos tickets): A × rag → A acerta 53 que o LLM erra e erra 21 que o LLM acerta (p = 0,0003); A × 3.8-flash → 70 × 7 (p < 10⁻¹³). Os 21 acertos exclusivos do rag sugerem testar o LLM como 'segunda opinião' na faixa de sugestão (não testado).
+- As respostas brutas do LLM estão em `outputs/llm_respostas/`.
 
 ## 3. Faixas de automação (limiares escolhidos na validação, medidos no teste)
 
