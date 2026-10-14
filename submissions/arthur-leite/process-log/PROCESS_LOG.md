@@ -70,3 +70,43 @@ Se eu colasse o brief num LLM, ele responderia "Critical demora mais, chat tem m
 
 ### Decisão (pendente de validação com o Arthur)
 Mudar o enquadramento do diagnóstico: o primeiro gargalo é **de medição**. A entrega vai mostrar o que dá para afirmar, o que não dá, e o que precisaria ser instrumentado. Os números de desperdício serão construídos a partir de volume × premissas explícitas e ajustáveis, nunca a partir das durações falsas.
+
+### 1.1 Revisão pelo agente juiz (pedido do Arthur: toda conclusão passa por um juiz)
+Criei um protocolo (`process-log/revisoes/PROTOCOLO_JUIZ.md`): um subagente com contexto limpo recebe só as afirmações e os CSVs brutos, **recalcula tudo com código próprio** sem ver o meu e tenta refutar.
+Parecer completo: `process-log/revisoes/fase1_auditoria_parecer.md`.
+
+**Resultado:** a tese central foi confirmada, mas 7 de 10 afirmações vieram "com ressalva". As correções mais importantes:
+
+| O que eu tinha dito | O que o juiz mostrou | Correção aplicada |
+|---|---|---|
+| "67% dos tickets não fechados = backlog real" (eu cheguei a dizer isso ao Arthur como algo aproveitável) | Os 3 status são equiprováveis (p = 0,33): é sorteio, não backlog | **Removido** como achado e transformado em mais uma evidência de dado sintético |
+| "Dataset é aleatório" | Forte demais | "Sintético, com variáveis geradas de forma independente" |
+| "Maior Cramér's V = 0,072" | Inflado pelos 42 produtos | V corrigido para viés (máx. 0,021) + "0 de 21 pares significativos" |
+| "Nada explica o CSAT, todos p > 0,25" | Omiti testes com p ≈ 0,035 e 0,041 (hora da resposta, data de compra) | Bateria completa com correção de Bonferroni, mostrando os dois p < 0,05 e explicando por que não são sinal |
+| (não declarado) | Faltava o poder estatístico | Adicionado: os testes detectariam 0,21 ponto de CSAT, então "não achar nada" não é falta de amostra |
+
+**Evidências novas trazidas pelo juiz e incorporadas:** timestamps que acompanham o Ticket ID (rastro do gerador), e-mails `@example`, resoluções no estilo Faker, máquina de estados sem exceção e um classificador sobre a descrição que fica abaixo do chute.
+
+**Aprendizado:** o erro do "backlog de 67%" é exatamente o tipo de conclusão plausível que passaria sem um revisor. Ele estava na minha mensagem ao Arthur antes da revisão.
+
+---
+
+## Fase 3 (adiantada) — Benchmark de classificadores no Dataset 2
+
+Adiantei esta fase enquanto o juiz revisava a Fase 1, porque ela não dependia do parecer.
+Scripts: `solution/03-prototipo/benchmark/` (`embed_ds2.py`, `llm_classify.py`, `benchmark.py`). Resultado: `benchmark/outputs/benchmark.md`.
+
+### Desenho
+- Mesmo conjunto de teste para tudo (20%, estratificado, seed 42). O restante foi dividido em treino (70%) e validação (10%).
+- **Limiares escolhidos na validação e medidos no teste**, para não superestimar.
+- Três abordagens: A) TF-IDF + regressão logística; B) embeddings MiniLM + regressão logística; C) LLM Gemini zero-shot e few-shot, com 20 tickets por chamada e as respostas brutas em cache como evidência.
+
+### Erros meus corrigidos durante a fase
+1. **Faixa "sugere" com precisão de 60%.** Eu usava a precisão *acumulada*, inflada pelos tickets de alta confiança. Corrigi para a precisão *dentro da faixa*.
+2. **Faixa "sugere" vazia** depois da correção: logo abaixo do limiar de 95%, a precisão da 1ª opção despenca. Redesenhei a faixa como produto: o humano escolhe entre as **2 sugestões**, e o critério passa a ser "a categoria certa está entre as 2" ≥ 90%.
+3. **Cache contaminado:** um teste com 40 tickets usou uma amostra diferente da de 400. Apaguei o cache antes da rodada oficial.
+
+### Resultados preliminares (ainda vão ao juiz)
+- A: 86,0% de acurácia, F1-macro 0,86, custo zero, 0,04 ms por ticket.
+- B: 80,8% de acurácia (pior que A: o texto pré-processado e sem stopwords favorece palavras-chave).
+- C: o LLM ficou em 44% (zero-shot) e 48% (few-shot) com flash-lite. **Hipótese:** as categorias são convenções internas da organização ("Miscellaneous", "Internal Project"), que um LLM não tem como adivinhar. Um modelo mais forte (gemini-3.5-flash) está rodando para garantir que a comparação seja justa e não um espantalho.
