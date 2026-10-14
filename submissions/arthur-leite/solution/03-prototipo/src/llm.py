@@ -23,8 +23,19 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 MODELOS = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest"]   # em ordem de preferência
 
 
+def _chave() -> str | None:
+    """Ordem: variável de ambiente / .env (local) → st.secrets (Streamlit Cloud)."""
+    if os.getenv("GEMINI_API_KEY"):
+        return os.environ["GEMINI_API_KEY"]
+    try:
+        import streamlit as st
+        return st.secrets.get("GEMINI_API_KEY")
+    except Exception:
+        return None
+
+
 def disponivel() -> bool:
-    return bool(os.getenv("GEMINI_API_KEY"))
+    return bool(_chave())
 
 
 def rascunhar_resposta(ticket: str, categoria: str, similares: list[dict], alertas: list[str]) -> str | None:
@@ -47,7 +58,7 @@ Write in English, max 90 words:
 2. The concrete information the agent still needs from the user (bullet list, max 3).
 3. Next step. If there is any policy flag, state that it requires approval/human handling.
 Do not invent names, ticket numbers, links or deadlines."""
-    cliente = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    cliente = genai.Client(api_key=_chave())
     cfg = types.GenerateContentConfig(temperature=0.2, max_output_tokens=300)
     for modelo in MODELOS:
         try:

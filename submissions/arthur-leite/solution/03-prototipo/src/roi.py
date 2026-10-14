@@ -69,8 +69,9 @@ def renderizar(st, av) -> None:
     import pandas as pd
 
     auto, sug, hum, prec, prec_sug = faixas_de(av)
-    st.markdown(f"Desempenho da IA **medido** no teste: {auto:.1%} automático (precisão {prec:.1%}) · "
-                f"{sug:.1%} sugestão · {hum:.1%} humano. As **premissas** abaixo são de mercado: troque pelos números reais da operação.")
+    br = lambda x: f"{100 * x:.1f}%".replace(".", ",")
+    st.markdown(f"Desempenho da IA **medido** no teste: {br(auto)} automático (precisão {br(prec)}) · "
+                f"{br(sug)} sugestão · {br(hum)} humano. As **premissas** abaixo são de mercado: troque pelos números reais da operação.")
     c = st.columns(3)
     p = Premissas(
         volume_ano=c[0].number_input("Tickets por ano", 1000, 1_000_000, 30_000, step=1000),
@@ -101,7 +102,7 @@ def renderizar(st, av) -> None:
                        "Tempo liberado (h/ano)": round(x["horas_recuperaveis"]), "Pessoas": round(x["fte"], 1),
                        "R$/ano": round(x["reais_ano"])})
     st.markdown("**Cenários (só tempo de triagem)**")
-    st.dataframe(pd.DataFrame(linhas), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(linhas), hide_index=True, width="stretch")
     st.info("**Antes de qualquer decisão financeira, o piloto mede:** (1) minutos de triagem por ticket, (2) % de reatribuições "
             "e (3) tempo de espera em fila errada. Ficam fora do número, de propósito, o tempo de espera do cliente "
             "(provavelmente o maior ganho) e os ganhos de rascunho e autoatendimento: somar números sem base seria vender o projeto, não avaliá-lo.")

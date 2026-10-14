@@ -21,6 +21,15 @@ from src.triagem import (COBERTURA_MINIMA, DADOS, SIMILARIDADE_MINIMA, MotorTria
 
 st.set_page_config(page_title="Triage Copilot", page_icon="🎫", layout="wide")
 
+if not DADOS.exists():  # 1ª execução num servidor novo (ex.: Streamlit Cloud): baixa os datasets públicos
+    with st.spinner("Baixando os datasets públicos do Kaggle (1ª execução)..."):
+        import baixar_dados  # noqa: F401  (o download roda na importação)
+
+def br(x: float, casas: int = 1) -> str:
+    """Percentual no padrão brasileiro: 67,5%."""
+    return f"{100 * x:.{casas}f}%".replace(".", ",")
+
+
 COR_FAIXA = {"auto": "#2E7D32", "sugere": "#F9A825", "humano": "#C62828"}
 NOME_FAIXA = {"auto": "Automático", "sugere": "Sugestão (humano confirma)", "humano": "Humano"}
 
@@ -95,7 +104,7 @@ with aba1:
             st.markdown("**Palavras que mais pesaram**")
             if r.palavras_chave:
                 st.dataframe(pd.DataFrame(r.palavras_chave, columns=["termo", "peso"]).round(3),
-                             hide_index=True, use_container_width=True)
+                             hide_index=True, width="stretch")
             st.markdown(f"**Top-2:** {r.top2[0][0]} ({r.top2[0][1]:.0%}) · {r.top2[1][0]} ({r.top2[1][1]:.0%})")
             st.caption(f"Travas de domínio: o modelo reconhece {r.cobertura_vocab:.0%} das palavras (mín. {COBERTURA_MINIMA:.0%}); "
                        f"similaridade com o histórico {r.similaridade:.2f} (mín. {SIMILARIDADE_MINIMA}).")
@@ -129,28 +138,28 @@ with aba2:
     k = st.columns(3)
     for col, faixa in zip(k, ["auto", "sugere", "humano"]):
         lin = resumo.loc[faixa]
-        extra = f"acerto da 1ª opção: {lin.precisao:.1%}" if faixa != "sugere" else f"certa entre as 2: {lin.top2:.1%}"
-        col.metric(NOME_FAIXA[faixa], f"{lin['% da fila']:.1%} da fila", extra)
+        extra = f"acerto da 1ª opção: {br(lin.precisao)}" if faixa != "sugere" else f"certa entre as 2: {br(lin.top2)}"
+        col.metric(NOME_FAIXA[faixa], f"{br(lin['% da fila'])} da fila", extra)
 
     g1, g2 = st.columns(2)
     with g1:
         por_cat = f.groupby(["categoria", "faixa"]).size().reset_index(name="tickets")
         st.plotly_chart(px.bar(por_cat, x="tickets", y="categoria", color="faixa", orientation="h",
                                color_discrete_map=COR_FAIXA, title="Faixa de automação por categoria prevista"),
-                        use_container_width=True)
+                        width="stretch")
     with g2:
         cm = pd.crosstab(f["real"], f["categoria"], normalize="index")
         st.plotly_chart(px.imshow(cm, text_auto=".0%", color_continuous_scale="Greens", aspect="auto",
-                                  title="Matriz de confusão (linhas = categoria real)"), use_container_width=True)
+                                  title="Matriz de confusão (linhas = categoria real)"), width="stretch")
 
     pol_lote = teste().loc[f.index, "Document"].map(avaliar)
     alert = pd.Series([a for p in pol_lote for a in p.alertas]).map(ROTULOS).value_counts()
-    st.markdown(f"**Política:** {pol_lote.map(lambda p: p.exige_humano_para_executar).mean():.1%} dos tickets da fila têm "
+    st.markdown(f"**Política:** {br(pol_lote.map(lambda p: p.exige_humano_para_executar).mean())} dos tickets da fila têm "
                 "uma ação que exige humano, mesmo quando o roteamento é automático.")
-    st.dataframe(alert.rename("tickets").to_frame(), use_container_width=True)
+    st.dataframe(alert.rename("tickets").to_frame(), width="stretch")
     with st.expander("Ver os erros da faixa automática"):
         erros = f[(f["faixa"] == "auto") & ~f["acertou"]].join(teste()["Document"])
-        st.dataframe(erros[["Document", "real", "categoria", "confianca"]], use_container_width=True)
+        st.dataframe(erros[["Document", "real", "categoria", "confianca"]], width="stretch")
 
 # ------------------------------------------------------------------ 3. DIAGNÓSTICO
 with aba3:
@@ -213,7 +222,7 @@ Benchmark completo: `benchmark/outputs/benchmark.md`.
 ### O que NÃO automatizamos
 """)
     st.dataframe(pd.DataFrame([{"Regra": ROTULOS[k], "Frequência no Dataset 2": v["freq_ds2"], "O que acontece": v["acao"],
-                                "Por quê": v["porque"]} for k, v in REGRAS.items()]), hide_index=True, use_container_width=True)
+                                "Por quê": v["porque"]} for k, v in REGRAS.items()]), hide_index=True, width="stretch")
     st.markdown("""
 ### Limitações
 - Treinado em tickets internos de TI, **em inglês**. Para outra operação, retreina-se com o histórico dela (minutos, sem GPU).
