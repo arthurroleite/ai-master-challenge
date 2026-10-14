@@ -1,5 +1,5 @@
 # App (Streamlit Cloud e local)
-pandas>=2.2
+pandas>=2.2,<3   # testado em 2.2; o código também roda no 3.x
 numpy>=2.0
 scipy>=1.13
 scikit-learn>=1.5

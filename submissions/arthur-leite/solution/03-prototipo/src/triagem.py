@@ -92,8 +92,10 @@ class MotorTriagem:
 
         P = clf.predict_proba(vec.transform(va["Document"]))
         conf, pred = P.max(1), clf.classes_[P.argmax(1)]
-        acerto = (pred == va["Topic_group"].values).astype(float)
-        top2 = (clf.classes_[np.argsort(-P, 1)[:, :2]] == va["Topic_group"].values[:, None]).any(1).astype(float)
+        # to_numpy(dtype=object): no pandas 3, colunas de texto são Arrow e .values não aceita [:, None]
+        y_va = va["Topic_group"].to_numpy(dtype=object)
+        acerto = (pred == y_va).astype(float)
+        top2 = (clf.classes_[np.argsort(-P, 1)[:, :2]] == y_va[:, None]).any(1).astype(float)
 
         global_auto = _limiar(conf, acerto, PRECISAO_AUTO)
         limiares = {}
@@ -163,7 +165,7 @@ class MotorTriagem:
         cat = self.clf.classes_[P.argmax(1)]
         conf = P.max(1)
         sim = 1 - self.nn.kneighbors(X, n_neighbors=1)[0].ravel()
-        cob = textos.map(self.cobertura_vocab).values
+        cob = textos.map(self.cobertura_vocab).to_numpy(dtype=float)
         lim = np.array([self.limiares[c] for c in cat])
         faixa = np.where((sim < SIMILARIDADE_MINIMA) | (cob < COBERTURA_MINIMA), "humano",
                          np.where(conf >= lim, "auto", np.where(conf >= self.limiar_sugere, "sugere", "humano")))

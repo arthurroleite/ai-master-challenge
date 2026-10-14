@@ -171,7 +171,7 @@ def main() -> None:
            "|---|---|---|---|---|"]
     todas_faixas = {}
     for k, r in res.items():
-        y_te, y_va = te["Topic_group"].values, va["Topic_group"].values
+        y_te, y_va = te["Topic_group"].to_numpy(dtype=object), va["Topic_group"].to_numpy(dtype=object)
         top2 = (r["top2"] == y_te[:, None]).any(1).astype(float)
         top2_va = (r["top2_va"] == y_va[:, None]).any(1).astype(float)
         f = faixas(r["conf_va"], (r["pred_va"] == y_va).astype(float), top2_va,
