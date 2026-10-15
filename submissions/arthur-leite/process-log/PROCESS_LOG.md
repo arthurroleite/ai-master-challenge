@@ -244,6 +244,10 @@ A 1ª execução do juiz caiu por limite de uso da API antes de gravar o relató
 
 **Recomendadas aplicadas:** o exemplo de compra na seção "Prova" virou "Pedido de compra (ambíguo)" e mostra as 2 opções ao agente (Miscellaneous 62% · Purchase 23%), em vez de parecer um erro; "travas de segurança" → "de domínio"; título do gráfico por categoria sem afirmar mais que a evidência (Hardware: 94,0% a 96,2%); "Funciona?" com a ressalva de retreino e modo sombra; ponte para as filas do Diretor no painel; ressalva do ruído de rótulo (n = 32) no app e no relatório; confiança com 1 casa decimal (não exibe mais "100%"); 93% (recuo) × 95% (entrada) explicado na proposta; cobertura da regra de privilégio declarada: dispara em só 1,5% dos tickets "Administrative rights" (27 de 1.760, recalculado).
 
+**Bug encontrado depois do juiz (pela IA, ao refazer os screenshots):** a calculadora de ROI fazia `cen.volume_ano = p.volume_ano` no dicionário global `CENARIOS`. Como o módulo é compartilhado entre as sessões do Streamlit, um visitante que mudasse "Tickets por ano" alterava os cenários do painel de todos os outros. Corrigido com `dataclasses.replace` (cópia). O `teste_app.py` ganhou uma checagem que **falha no código antigo e passa no novo** (verificado nos dois sentidos). Na mesma aba, os números passaram ao formato brasileiro. Também troquei "pode ser automatizada com segurança" por "com travas de segurança" no título do painel e do relatório.
+
+**Screenshots do protótipo refeitos** com a interface final: `01`–`06` (painel, faixas e o que não automatizar, prova e ROI, phishing escalado, fila real, calculadora).
+
 **Imagens do processo** (`process-log/screenshots/`, reconstituições de trechos literais):
 - 10: o Arthur exige um juiz em cada conclusão (Fase 1)
 - 11: o juiz derruba o "backlog de 67%" (Fase 1)

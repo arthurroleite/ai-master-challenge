@@ -6,7 +6,7 @@ Ver solution/01-diagnostico/outputs/modelo_desperdicio.md para a discussão das 
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 CUSTO_MES_ANALISTA = 6959          # R$: salário + encargos, salario.com.br, CBO 2124-20, out/2026 (n = 64.048)
 HORAS_MES = 42 * 52 / 12           # jornada de 42 h/semana
@@ -91,16 +91,17 @@ def renderizar(st, av) -> None:
     k[1].metric("Tempo liberado (bruto)", f"{r['horas_recuperaveis']:,.0f} h/ano".replace(",", "."))
     k[2].metric("Equivale a", f"{r['fte']:.1f} pessoa(s)".replace(".", ","))
     k[3].metric("Valor do tempo liberado", f"R$ {r['reais_ano']:,.0f}/ano".replace(",", "."))
-    st.caption(f"Custo/hora: R$ {p.custo_hora:.2f} (salário + encargos de analista de suporte, salario.com.br, out/2026). "
+    st.caption(f"Custo/hora: R$ {p.custo_hora:.2f}".replace(".", ",") + " (salário + encargos de analista de suporte, salario.com.br, out/2026). "
                "É **tempo liberado**, não economia de caixa; ainda não desconta implantação e manutenção.")
 
     linhas = []
     for nome, cen in CENARIOS.items():
-        cen.volume_ano = p.volume_ano
+        cen = replace(cen, volume_ano=p.volume_ano)  # cópia: não altera CENARIOS (compartilhado entre sessões)
         x = calcular(cen, auto, sug, hum, prec, prec_sug, False)
-        linhas.append({"Cenário": nome, "Minutos de triagem hoje": cen.triagem_min,
-                       "Tempo liberado (h/ano)": round(x["horas_recuperaveis"]), "Pessoas": round(x["fte"], 1),
-                       "R$/ano": round(x["reais_ano"])})
+        linhas.append({"Cenário": nome, "Minutos de triagem hoje": f"{cen.triagem_min:.1f}".replace(".", ","),
+                       "Tempo liberado (h/ano)": f"{x['horas_recuperaveis']:,.0f}".replace(",", "."),
+                       "Pessoas": f"{x['fte']:.1f}".replace(".", ","),
+                       "R$/ano": f"R$ {x['reais_ano']:,.0f}".replace(",", ".")})
     st.markdown("**Cenários (só tempo de triagem)**")
     st.dataframe(pd.DataFrame(linhas), hide_index=True, width="stretch")
     st.info("**Antes de qualquer decisão financeira, o piloto mede:** (1) minutos de triagem por ticket, (2) % de reatribuições "

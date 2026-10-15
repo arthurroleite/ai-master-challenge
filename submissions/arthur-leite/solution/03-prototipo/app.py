@@ -127,8 +127,8 @@ with aba_painel:
 <div class="hero">
   <div class="kicker">Triage Copilot · Redesign do Suporte com IA · Arthur Leite</div>
   <h1>Resposta ao Diretor de Operações</h1>
-  <p class="lead">Os dados atuais <b>não mostram</b> onde o suporte perde tempo. A <b>triagem</b> pode ser automatizada com
-  segurança, testada em {num(fx['n'])} tickets reais, começando em modo sombra.</p>
+  <p class="lead">Os dados atuais <b>não mostram</b> onde o suporte perde tempo. A <b>triagem</b> pode ser automatizada com travas
+  de segurança, testada em {num(fx['n'])} tickets reais, começando em modo sombra.</p>
   <div class="pedido"><b>Decisão pedida:</b> aprovar a instrumentação da operação e um piloto de 4 semanas (seção 5).</div>
 </div>
 <div class="cards">

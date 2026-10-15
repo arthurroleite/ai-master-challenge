@@ -154,6 +154,7 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 | O LLM devolveu um id truncado (9735 → 973) numa resposta em lote | Checagem de integridade | Respostas filtradas pelos ids válidos (1 em 1.400) |
 | Faixa humana atribuída a "confiança baixa" | Juiz final (9,7 dos 11,2 pontos vêm da trava) | Decomposição gerada pelo código e citada em todos os documentos |
 | **Deploy quebrou no Streamlit Cloud** (pandas 3) | Erro no deploy + juiz final, de forma independente | Código compatível com as 2 versões; testado num venv limpo com pandas 3 |
+| A calculadora de ROI alterava a tabela global de cenários: um visitante que mudasse "Tickets por ano" mudava os números do painel para todos | IA, ao refazer os screenshots finais | Cópia local dos cenários; teste automatizado que falha no código antigo e passa no novo |
 | A IA escreveu que os IC das combinações extremas "se sobrepõem" | A IA, ao reler a tabela | Falso para alguns pares; o argumento certo é comparações múltiplas + permutação |
 | Pergunta "onde o fluxo trava" respondida só com uma recusa | Juiz final | Tabela literal das piores/melhores combinações, com o teste de ruído |
 | A IA concluiu, por `curl`, que o app publicado estava **privado** | **Arthur**, testando numa aba anônima | Era o redirecionamento de login do Streamlit, que acontece até em apps públicos |
@@ -188,11 +189,11 @@ A vaga pede clareza sobre o papel de cada um. A conversa completa está em [`pro
 
 ## Evidências
 
-- [x] Chat export (conversa completa com o Claude Code, com o raciocínio interno e a memória pessoal removidos): [`process-log/chat-exports/`](process-log/chat-exports/)
+- [x] Chat export em 2 partes (sessão principal e sessão de fechamento, com o raciocínio interno e a memória pessoal removidos): [`process-log/chat-exports/`](process-log/chat-exports/)
 - [x] Git history: commits por fase nesta branch
 - [x] Pareceres do agente juiz: [`process-log/revisoes/`](process-log/revisoes/)
 - [x] Respostas brutas do LLM no benchmark (versionadas): [`solution/03-prototipo/benchmark/outputs/llm_respostas/`](solution/03-prototipo/benchmark/outputs/llm_respostas/)
-- [x] Screenshots do protótipo (01–05): [`process-log/screenshots/`](process-log/screenshots/)
+- [x] Screenshots do protótipo com a interface final (01–06): [`process-log/screenshots/`](process-log/screenshots/)
 - [x] Imagens do processo com a IA (10–15): **reconstituições visuais** de trechos do chat export e dos pareceres, **não capturas de tela**; cada imagem indica a fonte do trecho: [`process-log/screenshots/`](process-log/screenshots/)
 - [x] Relatórios do time de 5 agentes, incluindo o parecer do juiz sobre os demais: [`process-log/agentes/`](process-log/agentes/)
 - [x] Protótipo publicado: https://ai-master-challenge-v56hxnnkz3z5z7khq8n5oz.streamlit.app/

@@ -50,5 +50,12 @@ print("interação ticket aleatório + sortear: OK")
 at.slider[0].set_value(1000).run()
 assert not at.exception
 print("fila real com 1.000 tickets: OK")
+# calculadora de ROI: mudar o volume não pode alterar o painel (CENARIOS é compartilhado entre sessões)
+next(n for n in at.number_input if n.label == "Tickets por ano").set_value(60000).run()
+at.run()  # o painel roda antes da calculadora: o efeito apareceria no rerun seguinte
+assert not at.exception
+md = " ".join(m.value for m in at.markdown)
+assert "1.218 h" in md and "552" in md, "a calculadora alterou os cenários do painel"
+print("calculadora com 60.000 tickets: painel inalterado OK")
 print("métricas:", [(x.label, x.value) for x in at.metric][:7])
 print("TUDO OK em", round(time.time() - t, 1), "s")
