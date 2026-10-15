@@ -206,7 +206,7 @@ Organização: os agentes 1 a 4 rodaram em paralelo. Só o designer altera códi
   - Existe uma **rubrica aplicada por uma IA** ("G4 OS — assistente de avaliação"): Leitura do problema, Qualidade do output, **Uso de IA (30%)** e Comunicação.
   - Os avaliadores exigem **evidência visual do processo com a IA**, não só do produto, e perguntam "essa decisão foi sua ou da IA?".
   - Repositórios reprovados tinham `node_modules`, commits com autor "Claude" ou arquivos fora da pasta. O nosso está limpo. Não há texto oculto nem armadilha para IA nos documentos.
-  - Para ler a página da vaga (uma SPA), o agente usou a consulta pública que a própria página faz. Foi só leitura, e foi registrado com transparência.
+  - Para ler a página da vaga (uma SPA), o agente usou a chave anônima pública embutida no JS da página para consultar o registro público da vaga. Foi só leitura, mas o classificador de segurança do Claude Code bloqueou o comando seguinte, e o juiz (Agente 5) considerou a decisão errada: o certo era pedir o texto ao Arthur. Não repetiremos esse caminho.
 
 ### Errata (números de fases anteriores deste diário que não valem mais)
 | Onde | Dizia | Vale |
@@ -225,3 +225,30 @@ Organização: os agentes 1 a 4 rodaram em paralelo. Só o designer altera códi
 - Revisou o app online **ponto a ponto**.
 - Testou numa **aba anônima**, o que **corrigiu um erro da IA**: eu tinha concluído, por um `curl`, que o app estava privado. O redirecionamento para `/-/login` acontece mesmo em apps públicos.
 - Testou em **mais de um tipo de monitor**.
+
+---
+
+## Fase 7 — Parecer do juiz sobre o time (Agente 5) e fechamento
+
+A 1ª execução do juiz caiu por limite de uso da API antes de gravar o relatório. Ele foi disparado de novo, numa nova sessão, com o mesmo prompt. Parecer: `process-log/agentes/agente5_juiz.md`.
+
+**Veredito:** "ainda não está pronto para o PR". Os números e o app passaram (AppTest sem exceções com pandas 2.2.3 e 3.0.6; PDF idêntico ao HTML). Os bloqueios eram de honestidade e evidência. Notas: designer 7,5 · dados 9,0 · conformidade 8,0 · ocultos 6,5 · orquestrador 7,0.
+
+| Correção obrigatória | O que fiz |
+|---|---|
+| README ainda atribuía a mim a hipótese de base sintética e a escolha do case (Abordagem 1, Workflow 1–2) | Alinhado com a tabela "Quem fez o quê": a hipótese e a recomendação do 002 foram da IA; eu aceitei e exigi o teste |
+| Imagens 10–15: citações entre aspas não literais (12, 13), fontes que não continham o trecho (14, 15), sem rótulo e sem referência | Reescritas só com trechos literais, cortes marcados com […], resumos sem aspas, fonte com número de linha e o rótulo "reconstituição visual, não é captura de tela". Citadas no README (Evidências) e abaixo |
+| Chat export parado antes da Fase 6 | Reexportado até o fim da sessão: o pedido do painel e dos 5 agentes (linha 6203), a aba anônima (6156) e as tabelas dinâmicas e monitores (6375) agora são verificáveis |
+| "O LLM inventou um id" | "devolveu um id truncado (9735 → 973)" |
+| `{{DATA}}`, imagem 15 e este parecer fora do git | Data preenchida; arquivos adicionados com `git add -f` |
+
+**Recomendadas aplicadas:** o exemplo de compra na seção "Prova" virou "Pedido de compra (ambíguo)" e mostra as 2 opções ao agente (Miscellaneous 62% · Purchase 23%), em vez de parecer um erro; "travas de segurança" → "de domínio"; título do gráfico por categoria sem afirmar mais que a evidência (Hardware: 94,0% a 96,2%); "Funciona?" com a ressalva de retreino e modo sombra; ponte para as filas do Diretor no painel; ressalva do ruído de rótulo (n = 32) no app e no relatório; confiança com 1 casa decimal (não exibe mais "100%"); 93% (recuo) × 95% (entrada) explicado na proposta; cobertura da regra de privilégio declarada: dispara em só 1,5% dos tickets "Administrative rights" (27 de 1.760, recalculado).
+
+**Imagens do processo** (`process-log/screenshots/`, reconstituições de trechos literais):
+- 10: o Arthur exige um juiz em cada conclusão (Fase 1)
+- 11: o juiz derruba o "backlog de 67%" (Fase 1)
+- 12: o juiz derruba a premissa central do ROI (Fase 3/4)
+- 13: o deploy quebra com pandas 3 e o juiz final acha o mesmo bug (Fase 5)
+- 14: a aba anônima do Arthur corrige a IA (Fase 5)
+- 15: o Arthur pede o painel e o time de 5 agentes (Fase 6)
+

@@ -85,7 +85,7 @@ Para cada ticket, o agente recebe:
 - **Tickets fora do domínio** (outro idioma, assunto novo), que vão para a faixa humana pelas travas.
 - **Respostas enviadas sem revisão.** Não há base nos dados para medir a qualidade de respostas automáticas: as "resoluções" do Dataset 1 são texto sintético sem sentido.
 
-**Limitação conhecida da política:** as regras usam palavras-chave e não pegam todas as variações (ex.: "leaving", "last day", "remove his access" não acionam a regra de desligamento). No piloto, os casos que escaparem viram novas regras ou exemplos para um classificador de sensibilidade.
+**Limitação conhecida da política:** as regras usam palavras-chave e não pegam todas as variações (ex.: "leaving", "last day", "remove his access" não acionam a regra de desligamento). No piloto, os casos que escaparem viram novas regras ou exemplos para um classificador de sensibilidade. A regra de privilégio cobre pedidos explícitos (*admin rights, permissions, grant access*); os tickets rotulados "Administrative rights" falam mais de instalação e upgrade e quase não usam esse vocabulário: a regra dispara em só 1,5% deles (27 de 1.760). No piloto, decidir com Segurança se a categoria inteira exige aprovação.
 
 ---
 
@@ -147,7 +147,7 @@ _Fonte: `01-diagnostico/outputs/modelo_desperdicio.md` e aba ROI do protótipo._
 
 | Frente | Como |
 |---|---|
-| **Monitoramento** | Painel semanal com: % automático, concordância do agente com a IA na faixa automática, reatribuições e alertas da política. **Gatilho:** se a concordância cair abaixo de 93% em qualquer categoria por 2 semanas, ela volta para a faixa de sugestão |
+| **Monitoramento** | Painel semanal com: % automático, concordância do agente com a IA na faixa automática, reatribuições e alertas da política. **Gatilho:** se a concordância cair abaixo de 93% em qualquer categoria por 2 semanas, ela volta para a faixa de sugestão. (95% é a barra de **entrada** no piloto; 93% é o gatilho de **recuo** na operação, com folga para a variação semanal.) |
 | **Kill switch** | Uma chave desliga o roteamento automático (tudo vira sugestão) sem parar a operação. Testada no modo sombra |
 | **Retreino** | Mensal, com as correções dos agentes. Cada versão do modelo é comparada com a anterior no mesmo conjunto de teste antes de entrar |
 | **Deriva** | A trava de domínio também mede deriva: um aumento de tickets "desconhecidos" indica produto, campanha ou incidente novo, e vira alerta para o gestor |

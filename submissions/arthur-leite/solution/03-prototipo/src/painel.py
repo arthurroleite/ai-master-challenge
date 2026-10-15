@@ -6,7 +6,7 @@ método dos scripts oficiais. Cada função indica o script/arquivo de origem qu
 
   diagnostico_ds1()  ->  01-diagnostico/01_auditoria_dados.py  (seção 4b + seção 2 de outputs/auditoria.md)
   fora_do_dominio()  ->  benchmark/avaliar_motor.py            (seção 3 de outputs/motor_final.md)
-  politica_ds2()     ->  src/politica.py (docstring: 27,7%)  e  proposta.md (tabela do "não automatizar")
+  politica_ds2()     ->  src/politica.py (docstring: 23,4%)  e  proposta.md (tabela do "não automatizar")
   BENCHMARK_LLM      ->  benchmark/outputs/benchmark.md (as chamadas ao LLM não são refeitas no app:
                          custam cota da API; os números são os do arquivo, com a mesma casa decimal)
 

@@ -106,7 +106,7 @@
     <tr><td>LLM (Gemini flash-lite) com o nome das categorias</td><td>44%</td></tr>
   </table>
   <p class="note">A diferença entre o modelo simples e o melhor LLM é estatisticamente significativa (p = 0,0003). Teste feito no plano gratuito do Gemini, com texto já pré-processado: um LLM mais forte, com definições das categorias, provavelmente reduziria a distância.</p>
-  <p><strong>O ativo é o histórico rotulado, não o modelo.</strong> As categorias seguem convenções internas: "Administrative rights", por exemplo, é na prática instalação de software. O LLM só melhora quando recebe esse histórico, e aí empata com o simples voto dos 5 tickets mais parecidos: quem acerta é o histórico. O modelo local tem custo praticamente nulo por ticket, responde em milissegundos e não envia dados para fora. O LLM fica onde agrega: <strong>redigir rascunhos</strong> para o agente revisar.</p>
+  <p><strong>O ativo é o histórico rotulado, não o modelo.</strong> As categorias seguem convenções internas: os termos que mais pesam em "Administrative rights", por exemplo, são de instalação de software. O LLM só melhora quando recebe esse histórico, e aí empata com o simples voto dos 5 tickets mais parecidos: quem acerta é o histórico. O modelo local tem custo praticamente nulo por ticket, responde em milissegundos e não envia dados para fora. O LLM fica onde agrega: <strong>redigir rascunhos</strong> para o agente revisar.</p>
 </section>
 
 <section>
@@ -141,7 +141,7 @@
     <div class="kpi"><div class="v ok">1.218 h</div><div class="l"><strong>base</strong> (3 min/ticket) · 0,7 pessoa · R$ 47 mil/ano</div></div>
     <div class="kpi"><div class="v">2.106 h</div><div class="l">otimista (5 min/ticket) · 1,2 pessoa · R$ 81 mil/ano</div></div>
   </div>
-  <p class="note">Em base mensal: de 46 a 175 h/mês (base ≈ 101 h/mês ≈ R$ 3,9 mil/mês). <strong>Maior desperdício recuperável mensurável:</strong> o tempo de triagem manual, dos quais a IA libera ~80%. O maior de todos, a espera do cliente na fila errada, só será medido com a instrumentação.</p>
+  <p class="note">Em base mensal: de 46 a 175 h/mês (base ≈ 101 h/mês ≈ R$ 3,9 mil/mês). <strong>Maior desperdício recuperável mensurável:</strong> o tempo de triagem manual: ~1.500 h/ano no cenário base, das quais a IA libera ~80%. O maior de todos, a espera do cliente na fila errada, só será medido com a instrumentação.</p>
   <p class="note">É <strong>tempo de agente liberado</strong>, não economia de caixa, e ainda não desconta implantação e manutenção. Volume: 30 mil tickets/ano. Custo/hora: R$ 38 (salário + encargos, salario.com.br, out/2026). O resultado depende quase só de uma premissa de fonte fraca (minutos de triagem hoje).
   <strong>Ficam fora, de propósito:</strong> o tempo de espera do cliente na fila errada (provavelmente o maior ganho), a redução de reroteamento (não demonstrada) e os rascunhos.</p>
   <h3>Piloto de 4 semanas</h3>
@@ -158,7 +158,7 @@
   <h2>6. Limitações</h2>
   <ul>
     <li><strong>Domínio:</strong> o desempenho foi medido em tickets internos de TI, em inglês. Uma operação de suporte ao cliente retreina com o próprio histórico (minutos, sem GPU) e mede de novo.</li>
-    <li><strong>Rótulos:</strong> o Dataset 2 tem ruído estimado de 15 a 25%; parte dos "erros" pode ser rótulo errado.</li>
+    <li><strong>Rótulos:</strong> o Dataset 2 tem ruído estimado de 15 a 25% (amostra de 32 textos: ordem de grandeza); parte dos "erros" pode ser rótulo errado.</li>
     <li><strong>Travas de domínio:</strong> o limiar foi escolhido observando os mesmos tickets de outro domínio usados para avaliá-lo; o resultado (11% passando) tende a ser otimista.</li>
     <li><strong>Política:</strong> regras por palavra-chave, sensíveis de propósito, com falsos alarmes (custam segundos) e variações que escapam (ex.: "last day" não aciona desligamento).</li>
     <li><strong>ROI:</strong> premissas de mercado até o piloto substituí-las por medição.</li>

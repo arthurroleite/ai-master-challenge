@@ -83,7 +83,7 @@ def politica_ds2() -> dict:
 
 EXEMPLOS = {
     "Hardware rotineiro": "Hi, my laptop screen is flickering and the external monitor is not detected since this morning. Can you help?",
-    "Aprovação de compra": "Please approve the purchase order for 3 new docking stations for the finance team.",
+    "Pedido de compra (ambíguo)": "Please approve the purchase order for 3 new docking stations for the finance team.",
     "Fora do domínio (em português)": "Quero saber o status do meu pedido de reembolso do curso",
     "Possível phishing": "URGENT: I received a suspicious email asking for my password and I clicked the link. What should I do?",
     "Desligamento de funcionário": "John is a leaver from Friday, please remove his access to all systems and collect his laptop.",
@@ -143,7 +143,7 @@ with aba_painel:
   <div class="card c3"><div class="q">3 · Funciona?</div>
     <div class="big">{num(fx['n'])}</div>
     <div class="sub">tickets reais que o modelo nunca viu, testados inteiros (sem escolha a dedo)</div>
-    <div class="ans"><b>Sim</b>: o protótipo classifica, explica, aplica a política e sugere resposta. Teste nas abas acima.</div></div>
+    <div class="ans"><b>Sim, em tickets reais de TI.</b> Na sua operação, depois de retreinar no seu histórico e passar pelo modo sombra. Teste nas abas acima.</div></div>
   <div class="card c4"><div class="q">Quanto vale?</div>
     <div class="big">{num(base['horas_recuperaveis'])} h</div>
     <div class="sub">de agente liberadas por ano no cenário base, ≈ {num(base['horas_recuperaveis'] / 12)} h/mês (faixa: {num(cenarios['Conservador']['horas_recuperaveis'])} a {num(cenarios['Otimista']['horas_recuperaveis'])} h/ano)</div>
@@ -191,12 +191,13 @@ cara de verdade e levaria a decisões erradas. Nem as variáveis se relacionam e
     # ---------------------------------------------------------- 2. o que automatizar / o que não
     secao("2", "O que automatizar com IA: a triagem, em 3 faixas de confiança",
           f"Validado em {num(len(base_ds2()))} tickets reais de TI (Dataset 2): o modelo aprendeu com o histórico e foi medido em "
-          f"{num(fx['n'])} tickets que nunca viu. Ele só decide sozinho quando a precisão medida é de pelo menos 95%.")
+          f"{num(fx['n'])} tickets que nunca viu. Ele só decide sozinho quando a precisão medida na validação é de pelo menos 95%.")
     st.plotly_chart(P.fig_faixas(fx), width="stretch", config=GRAFICO)
     st.markdown(f"""
 <div class="nota"><span class="pill auto">Automático</span> a IA roteia sozinha &nbsp;·&nbsp;
 <span class="pill sugere">Sugestão</span> a IA mostra 2 opções e o agente escolhe com 1 clique &nbsp;·&nbsp;
-<span class="pill humano">Humano</span> o agente classifica do zero (inclui {pct(fx['humano_trava'])} barrados pelas travas de segurança)</div>
+<span class="pill humano">Humano</span> o agente classifica do zero (inclui {pct(fx['humano_trava'])} barrados pelas travas de domínio)</div>
+<div class="nota">Na sua operação, as 8 categorias de TI da prova viram as suas filas: Billing, Refund, Technical issue, Product inquiry e Cancellation. O motor é o mesmo, retreinado no seu histórico.</div>
 <div class="kpis">
   <div class="kpi"><div class="v" style="color:var(--verde)">{pct(fx['auto']['acerto'])}</div>
     <div class="l">de acerto na faixa automática. Todas as 8 categorias ficam em 95% ou mais (Hardware no limite)</div></div>
@@ -208,8 +209,8 @@ cara de verdade e levaria a decisões erradas. Nem as variáveis se relacionam e
 """, unsafe_allow_html=True)
     c1, c2 = st.columns(2, gap="large")
     with c1:
-        titulo_grafico("Cada categoria só é automatizada acima de 95% de acerto",
-                       "Acerto da faixa automática por categoria. Hardware, a mais confundida, está no limite.")
+        titulo_grafico("Na faixa automática, todas as categorias ficaram em 95% ou mais no teste",
+                       "Acerto da faixa automática por categoria (estimativa pontual). Hardware, a mais confundida, está no limite: intervalo de 94,0% a 96,2%.")
         st.plotly_chart(P.fig_acerto_categoria(fx["por_categoria"]), width="stretch", config=GRAFICO)
     with c2:
         titulo_grafico("Por que não um LLM para classificar? O modelo do histórico acerta mais",
@@ -242,14 +243,16 @@ fora do domínio</b> (outro idioma ou assunto novo vão para a faixa humana).</d
   <div class="passo"><b>4 · Na fila (copiloto)</b>palavras-chave + 3 casos parecidos + rascunho; ação sensível → sempre humano</div>
 </div>""", unsafe_allow_html=True)
     blocos = []
-    for nome in ["Hardware rotineiro", "Aprovação de compra", "Fora do domínio (em português)", "Possível phishing"]:
+    for nome in ["Hardware rotineiro", "Pedido de compra (ambíguo)", "Fora do domínio (em português)", "Possível phishing"]:
         texto = EXEMPLOS[nome]
         r = m.classificar(texto)
         dec = decidir(r, avaliar(texto))
         classe, rot = classe_decisao(r, dec)
         blocos.append(f'<div class="ex"><div class="kicker">{nome}</div><div class="txt">"{html.escape(texto)}"</div>'
                       f'<div class="res"><span class="pill {classe}">{rot}</span> → {html.escape(dec.fila)}</div>'
-                      f'<div class="nota">Ação: {html.escape(dec.executar)}</div></div>')
+                      + (f'<div class="nota">2 opções ao agente: {html.escape(r.top2[0][0])} ({pct(r.top2[0][1], 0)}) · '
+                         f'{html.escape(r.top2[1][0])} ({pct(r.top2[1][1], 0)})</div>' if r.faixa == "sugere" else "")
+                      + f'<div class="nota">Ação: {html.escape(dec.executar)}</div></div>')
     st.markdown(f'<div class="exemplos">{"".join(blocos)}</div>'
                 '<div class="nota" style="margin-top:.5rem">Teste com qualquer texto na aba <b>Triagem ao vivo</b> e veja o '
                 f'desempenho nos {num(fx["n"])} tickets na aba <b>Fila real</b>.</div>', unsafe_allow_html=True)
@@ -337,7 +340,7 @@ with aba_ao_vivo:
 <div class="decisao-ticket {classe}">
   <div class="rot">{rot} · {html.escape(dec.modo)}</div>
   <div class="fila">Fila: {html.escape(dec.fila)}</div>
-  <div class="det">Confiança do modelo: <b>{pct(r.confianca, 0)}</b> &nbsp;·&nbsp; Quem executa a ação: <b>{html.escape(dec.executar)}</b></div>
+  <div class="det">Confiança do modelo: <b>{pct(r.confianca, 1)}</b> &nbsp;·&nbsp; Quem executa a ação: <b>{html.escape(dec.executar)}</b></div>
 </div>""", unsafe_allow_html=True)
         if dec.escalar:
             st.error("Escalar agora: a política detectou urgência ou incidente de segurança.")
@@ -496,7 +499,7 @@ ticket entra
     st.markdown("""
 ### Limitações
 - Treinado em tickets internos de TI, **em inglês**. Para outra operação, retreina-se com o histórico dela (minutos, sem GPU).
-- Os rótulos do Dataset 2 têm ruído estimado de 15–25%: parte dos "erros" medidos é rótulo errado.
+- Os rótulos do Dataset 2 têm ruído estimado de 15–25% (amostra de 32 textos: ordem de grandeza): parte dos "erros" medidos é rótulo errado.
 - Travas de domínio: o limiar foi escolhido observando os mesmos tickets de outro domínio usados para avaliá-lo; o resultado tende a ser otimista.
 - As regras da política são por palavra-chave: alta sensibilidade de propósito, mas com falsos positivos (custam segundos de um humano) e variações que escapam (ex.: "last day" não aciona desligamento).
 - O ROI usa premissas de mercado, porque os tempos do Dataset 1 são sintéticos. Os números reais vêm do piloto.

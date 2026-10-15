@@ -34,7 +34,7 @@ O ganho estimado é de **~1.200 h/ano (~100 h/mês) de agente no cenário base**
 
 ### Abordagem
 
-1. **Desconfiar antes de analisar.** Antes de abrir os dados, levantei a hipótese de que a base era sintética. Depois testei cada campo: o texto é real? os tempos são tempos? as variáveis se relacionam? algo explica o CSAT? Para "não achar nada" valer como resultado, calculei o poder estatístico.
+1. **Desconfiar antes de analisar.** Antes de abrir os dados, a IA levantou a hipótese de que a base era sintética, e eu exigi que ela fosse testada antes de qualquer diagnóstico. Cada campo foi testado: o texto é real? os tempos são tempos? as variáveis se relacionam? algo explica o CSAT? Para "não achar nada" valer como resultado, o poder estatístico foi calculado.
 2. **Responder às perguntas do Diretor ao pé da letra, com o grau de certeza.** Inclusive "quais combinações geram os piores tempos", com o teste que mostra que é ruído.
 3. **Cruzar os datasets pelo que cada um prova.** O Dataset 1 dá a *estrutura* da operação e 8.469 tickets de **outro domínio**, usados para testar as travas da IA. O Dataset 2, com rótulos reais, prova a *automação*.
 4. **Comparar abordagens em vez de assumir.** TF-IDF, embeddings, kNN e LLM (zero-shot, few-shot, RAG e um modelo mais forte), todos na mesma amostra, com teste pareado.
@@ -79,8 +79,8 @@ O ganho estimado é de **~1.200 h/ano (~100 h/mês) de agente no cenário base**
 
 - O desempenho foi medido em tickets internos de TI, em inglês. Esta operação precisa retreinar no próprio histórico, e a qualidade desse histórico ainda não foi verificada.
 - Os rótulos do Dataset 2 têm ruído estimado em 15 a 25% (amostra de 32 textos: ordem de grandeza, não precisão).
-- O limiar da trava de domínio (0,20) foi escolhido por inspeção, com o Dataset 1 à vista, então o resultado fora do domínio é otimista. Ele barra 10,4% dos tickets normais (validação); a sensibilidade está em `motor_final.md`.
-- A política usa palavras-chave: há falsos alarmes e variações que escapam.
+- O limiar da trava de domínio (0,20) foi escolhido por inspeção, com o Dataset 1 à vista e possivelmente com o teste à vista, então o resultado fora do domínio é otimista. Ele barra 10,4% dos tickets normais (validação); a sensibilidade está em `motor_final.md`.
+- A política usa palavras-chave: há falsos alarmes e variações que escapam. A regra de privilégio cobre pedidos explícitos (*admin rights, permissions, grant access*); os tickets rotulados "Administrative rights" falam mais de instalação e upgrade e a regra dispara em só 1,5% deles (27 de 1.760). No piloto, decidir com Segurança se a categoria inteira exige aprovação.
 - O ROI usa premissas de mercado (a principal, de fonte fraca) até o piloto medir; é tempo liberado bruto, não caixa.
 - O LLM foi testado no plano gratuito do Gemini (sobrecarga e cota limitaram o modelo mais forte a 200 tickets).
 
@@ -93,6 +93,7 @@ O ganho estimado é de **~1.200 h/ano (~100 h/mês) de agente no cenário base**
 pip install -r requirements.txt
 python baixar_dados.py                  # baixa os 2 datasets do Kaggle (sem login)
 streamlit run app.py                    # na 1ª execução, treina o motor (~1 min, CPU)
+python teste_app.py                     # teste automatizado: números do painel + interações (sem API)
 ```
 Opcional, para os rascunhos por LLM: crie `.env` com `GEMINI_API_KEY=...` (chave gratuita do Google AI Studio). Sem ela, todo o resto funciona.
 
@@ -127,8 +128,8 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 
 ### Workflow
 
-1. Li a vaga e todos os arquivos do repo e escolhi o 002 pelo encaixe com a minha experiência: opero agentes de atendimento com IA em produção.
-2. **Hipótese antes dos dados:** a base devia ser sintética. Confirmada na 1ª checagem e depois auditada com testes estatísticos.
+1. A IA leu a vaga e todos os arquivos do repo e recomendou o 002, mostrando a concorrência por challenge; aceitei a recomendação.
+2. **Hipótese antes dos dados (levantada pela IA):** a base devia ser sintética. Confirmada na 1ª checagem e depois auditada com testes estatísticos.
 3. Pedi que **cada conclusão** passasse por um agente juiz com contexto limpo e postura adversarial.
 4. Benchmark de 4 abordagens + 4 variantes de LLM, com limiares calibrados na validação e medidos no teste.
 5. Protótipo construído e testado com casos de borda (phishing, outro idioma, aprovação). Cada falha virou uma trava.
@@ -150,7 +151,7 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 | Confiança alta em ticket de outro domínio (34% passariam) | Teste fora do domínio | Travas de similaridade e de vocabulário |
 | Phishing roteado automaticamente para "Access" | Teste de borda | A política sobrepõe o classificador |
 | Rascunho do LLM inverteu o sentido ("not detected" → "detected") | Teste do rascunho | O LLM recebe o texto original (o pré-processamento removia "not") |
-| O LLM inventou um id numa resposta em lote | Checagem de integridade | Respostas filtradas pelos ids válidos (1 em 1.400) |
+| O LLM devolveu um id truncado (9735 → 973) numa resposta em lote | Checagem de integridade | Respostas filtradas pelos ids válidos (1 em 1.400) |
 | Faixa humana atribuída a "confiança baixa" | Juiz final (9,7 dos 11,2 pontos vêm da trava) | Decomposição gerada pelo código e citada em todos os documentos |
 | **Deploy quebrou no Streamlit Cloud** (pandas 3) | Erro no deploy + juiz final, de forma independente | Código compatível com as 2 versões; testado num venv limpo com pandas 3 |
 | A IA escreveu que os IC das combinações extremas "se sobrepõem" | A IA, ao reler a tabela | Falso para alguns pares; o argumento certo é comparações múltiplas + permutação |
@@ -166,7 +167,7 @@ A vaga pede clareza sobre o papel de cada um. A conversa completa está em [`pro
 
 | Etapa | Arthur | IA (Claude Code e subagentes) |
 |---|---|---|
-| Escolha do case | Decidiu pelo 002, com base na experiência de operar agentes de atendimento com IA em produção | Leu a vaga e o repo inteiro; recomendou o 002 e mostrou a concorrência por challenge |
+| Escolha do case | Aceitou a recomendação da IA pelo 002 | Leu a vaga e o repo inteiro; recomendou o 002 e mostrou a concorrência por challenge |
 | Hipótese de base sintética | Validou a mudança de enquadramento ("o 1º gargalo é de medição") | **Levantou a hipótese** e fez a auditoria estatística |
 | **Rigor e verificação** | **Exigiu um juiz adversarial em cada conclusão** e fidelidade acima de "parecer inteligente". Foi isso que derrubou o backlog de 67%, o ROI inflado e o bug do deploy | Implementou o protocolo; os juízes recalcularam tudo do zero |
 | Análise, modelos, protótipo, documentos | Revisou e aprovou cada fase | Escreveu o código, os testes estatísticos, o benchmark, o app e os documentos |
@@ -191,9 +192,11 @@ A vaga pede clareza sobre o papel de cada um. A conversa completa está em [`pro
 - [x] Git history: commits por fase nesta branch
 - [x] Pareceres do agente juiz: [`process-log/revisoes/`](process-log/revisoes/)
 - [x] Respostas brutas do LLM no benchmark (versionadas): [`solution/03-prototipo/benchmark/outputs/llm_respostas/`](solution/03-prototipo/benchmark/outputs/llm_respostas/)
-- [x] Screenshots do protótipo: [`process-log/screenshots/`](process-log/screenshots/)
+- [x] Screenshots do protótipo (01–05): [`process-log/screenshots/`](process-log/screenshots/)
+- [x] Imagens do processo com a IA (10–15): **reconstituições visuais** de trechos do chat export e dos pareceres, **não capturas de tela**; cada imagem indica a fonte do trecho: [`process-log/screenshots/`](process-log/screenshots/)
+- [x] Relatórios do time de 5 agentes, incluindo o parecer do juiz sobre os demais: [`process-log/agentes/`](process-log/agentes/)
 - [x] Protótipo publicado: https://ai-master-challenge-v56hxnnkz3z5z7khq8n5oz.streamlit.app/
 
 ---
 
-_Submissão enviada em: {{DATA}}_
+_Submissão enviada em: 15/10/2026_
