@@ -4,6 +4,8 @@
 
 Os números deste documento vêm de scripts reproduzíveis. As fontes estão indicadas em cada seção.
 
+**Como os dois datasets se cruzam.** O Dataset 1 (operação de suporte a clientes) não sustenta diagnóstico de tempos, mas dá duas coisas: a **estrutura** da operação (status, canais, prioridades, tipos), que molda o fluxo abaixo, e um conjunto de **8.469 tickets de outro domínio**, usado para testar e calibrar as travas que impedem a IA de decidir sobre o que não conhece. O Dataset 2 (48 mil tickets reais de TI, com rótulos coerentes) é onde a triagem é treinada e medida. **A abordagem foi validada em dados reais; nesta operação, ela começa retreinando no histórico próprio e rodando em modo sombra** (seção 4).
+
 ---
 
 ## 1. O que automatizar
@@ -14,18 +16,20 @@ Os números deste documento vêm de scripts reproduzíveis. As fontes estão ind
 |---|---|---|---|
 | **Automático** | A IA roteia; o agente vê a categoria já atribuída | **65,5%** | **96,4%** (IC95% de 95,9 a 96,8%) |
 | **Sugestão** | A IA mostra as 2 categorias mais prováveis; o agente escolhe com 1 clique | 23,3% | A certa está entre as 2 em 91,0% |
-| **Humano** | O agente classifica do zero | 11,2% | — |
+| **Humano** | O agente classifica do zero | 11,2% | — (ver a decomposição abaixo) |
 
 _Fonte: `03-prototipo/benchmark/outputs/motor_final.md` (9.568 tickets reais de teste, nunca vistos no treino)._
 
 - **Limiar por categoria:** cada categoria só é automatizada acima do limiar em que atinge ≥ 95% na validação. Hardware, a categoria mais confundida, exige 78% de confiança; as outras, 71% a 75%. Na faixa automática, todas as 8 categorias ficam entre 95,1% e 99,0%.
-- **Travas de domínio:** se o ticket não se parece com o histórico, vai para humano, mesmo que o modelo "tenha certeza". Isso acontece quando a similaridade com o caso mais próximo fica abaixo de 0,20 ou quando o modelo reconhece menos de 50% das palavras. Testado com 8.469 tickets de outro domínio (clientes de produto): **sem as travas, 34% iriam para a faixa automática; com elas, 11%**.
+- **Travas de domínio:** se o ticket não se parece com o histórico, vai para humano, mesmo que o modelo "tenha certeza". Isso acontece quando a similaridade com o caso mais próximo fica abaixo de 0,20 ou quando o modelo reconhece menos de 50% das palavras. Testado com os 8.469 tickets do Dataset 1 (outro domínio): **sem as travas, 34% iriam para a faixa automática; com elas, 11%**.
+- **De onde vêm os 11,2% da faixa humana:** 1,5% por confiança baixa e **9,7% pela trava de domínio**. A trava também barra tickets normais, porém atípicos, que o modelo acertaria em 79% dos casos. É o preço, assumido, de não deixar a IA decidir sobre o que não conhece. Depois do piloto, o limiar pode ser recalibrado com dados da própria operação.
+- **Hardware está no limite** (95,1% na faixa automática); as demais categorias ficam entre 95,8% e 99,0%.
 
 ### 1.2 Por que um modelo treinado no histórico, e não um LLM, para classificar
 
 | Abordagem (mesma amostra de 400 tickets) | Acerto |
 |---|---|
-| **Classificador simples (TF-IDF + regressão logística) treinado no histórico** | **85,0%** |
+| **Classificador simples (TF-IDF + regressão logística) treinado no histórico** | **85,0%** (86,0% no teste completo) |
 | Embeddings genéricos + regressão logística | 78,2% |
 | Voto dos 5 tickets mais parecidos do histórico | 73,3% |
 | LLM Gemini flash-lite, só com o nome das categorias | 44,0% |
@@ -61,7 +65,16 @@ Para cada ticket, o agente recebe:
 | **Privilégio de acesso** | 13,0% | Concessão com aprovação do gestor e registro | Controle de segurança auditável |
 | **Urgência / indisponibilidade** | 7,7% | Prioridade sobe e o plantão é notificado | O tempo de espera importa mais que a categoria |
 
-\* Frequência nos 47.837 tickets do Dataset 2. No total, **27,7%** dos tickets têm uma ação que exige humano, mesmo quando o roteamento é automático.
+\* Frequência nos 47.837 tickets do Dataset 2 (no conjunto de teste, 27,9%). No total, **27,7%** dos tickets têm uma ação que exige humano, mesmo quando o roteamento é automático.
+
+**Exemplos reais do Dataset 2** (texto já pré-processado na origem; # = linha do CSV):
+
+| Ticket | Rótulo original | O que a política faz |
+|---|---|---|
+| #36521 *"suspicious sent monday … regarding multiple complains our users please block following domains …"* | Hardware | Pela categoria, iria para a fila de Hardware. A regra de **segurança** manda para Segurança da Informação, com escalonamento |
+| #5461 *"leaver mobile phone … had mobile subscription plan available mobile number note mailbox receive messages"* | Hardware | Roteado para Hardware, mas é um **desligamento**: revogar linha e caixa de e-mail é com humano, com checklist |
+| #31874 *"maternity leaver form … please find attached filled …"* | HR Support | **Saúde/afastamento**: só o RH responde, e o texto **não vai para o LLM** |
+| #8682 *"new purchase po … please log allocation … mandatory receipts section order …"* | Purchase | Roteamento automático, mas a **aprovação da compra** é humana |
 
 **Por que regras explícitas, e não a categoria prevista:** os temas sensíveis atravessam as categorias. As menções a segurança caem 41% em Hardware, 19% em Administrative rights e 17% em Access. Uma regra baseada na categoria deixaria passar a maioria. As regras são propositalmente sensíveis: um falso alarme custa segundos de um humano.
 
@@ -69,6 +82,8 @@ Para cada ticket, o agente recebe:
 - **Fechar tickets.** Quem confirma a resolução é o cliente ou o agente.
 - **Tickets fora do domínio** (outro idioma, assunto novo), que vão para a faixa humana pelas travas.
 - **Respostas enviadas sem revisão.** Não há base nos dados para medir a qualidade de respostas automáticas: as "resoluções" do Dataset 1 são texto sintético sem sentido.
+
+**Limitação conhecida da política:** as regras usam palavras-chave e não pegam todas as variações (ex.: "leaving", "last day", "remove his access" não acionam a regra de desligamento). No piloto, os casos que escaparem viram novas regras ou exemplos para um classificador de sensibilidade.
 
 ---
 
@@ -81,12 +96,12 @@ TICKET ENTRA (e-mail, chat, telefone transcrito, redes)
  │                           urgência? ───────────────► prioridade ↑ + plantão          [humano notificado]
  │                           saúde? ──────────────────► sem rascunho por LLM
  │
- ├─ 2. TRAVAS DE DOMÍNIO ── não reconheço este ticket ─► Triagem humana                 [humano]
+ ├─ 2. TRAVAS DE DOMÍNIO ── não reconheço este ticket ─► Triagem humana (9,7%)          [humano]
  │
  ├─ 3. CLASSIFICADOR
  │      confiança ≥ limiar da categoria ─► roteado automaticamente (65,5%)  [IA]
  │      confiança média ─────────────────► 2 sugestões, agente escolhe (23,3%) [IA sugere, humano decide]
- │      confiança baixa ─────────────────► triagem humana (11,2%)           [humano]
+ │      confiança baixa ─────────────────► triagem humana (1,5%)            [humano]
  │
  └─ 4. NA FILA ── agente recebe: palavras-chave + 3 casos parecidos + rascunho (LLM)
                   ação sensível (aprovar, conceder, revogar) ──► sempre humano
@@ -101,10 +116,12 @@ TICKET ENTRA (e-mail, chat, telefone transcrito, redes)
 
 | Semana | O que | Critério para avançar |
 |---|---|---|
-| 0 | **Instrumentar:** carimbos separados de criação, 1ª resposta e resolução; log de cada mudança de fila; categoria na abertura × na resolução | Dados chegando completos |
+| 0 | **Instrumentar:** carimbos separados de criação, 1ª resposta e resolução; log de cada mudança de fila; categoria na abertura × na resolução. **Retreinar** o modelo no histórico rotulado da operação e medir a concordância desses rótulos | Dados chegando completos; rótulos históricos com qualidade suficiente |
 | 1–2 | **Modo sombra:** a IA classifica, mas não roteia; mede-se a concordância com os agentes | Concordância ≥ 95% na faixa automática |
 | 3–4 | **Faixa automática ligada** para as 3 categorias mais estáveis (Purchase, Access, Storage: 97,8–99,0%) | Reatribuições não aumentam |
 | 5+ | Todas as categorias, sugestões e rascunho | Ganho de tempo medido ≥ cenário conservador |
+
+Com a instrumentação ligada na semana 0, ao fim das 4 semanas de piloto (≈ 30 dias) a operação passa a ter, pela primeira vez, dados para um **diagnóstico real** de gargalos.
 
 **Métricas do piloto** (substituem as premissas do ROI):
 1. Minutos de triagem por ticket, antes × depois

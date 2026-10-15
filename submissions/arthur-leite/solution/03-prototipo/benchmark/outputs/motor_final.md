@@ -10,6 +10,15 @@ _9.568 tickets reais do Dataset 2 que o modelo nunca viu. Gerado por `benchmark/
 | Sugestão (humano escolhe entre 2) | 23,3% | 63,4% | 91,0% |
 | Humano | 11,2% | 72,4% | 90,2% |
 
+**Por que um ticket vai para humano:**
+
+| Motivo | % de todos os tickets | O modelo acertaria | Sem as travas, iria para |
+|---|---|---|---|
+| confiança baixa | 1,5% | 33,6% | humano 100,0% |
+| trava de domínio | 9,7% | 78,6% | auto 55,7%, sugere 41,8%, humano 2,5% |
+
+A trava de domínio troca cobertura por segurança: ela também barra tickets normais, porém atípicos (pouco parecidos com o histórico), que o modelo acertaria na maioria das vezes. É o custo de não deixar passar tickets de outro domínio (seção 3).
+
 Intervalo de confiança de 95% (bootstrap) para o acerto da faixa automática: **95,9% a 96,8%**.
 
 Para comparar: o modelo sem as travas acerta 86,0% no geral.

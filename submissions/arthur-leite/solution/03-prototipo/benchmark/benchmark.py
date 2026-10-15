@@ -12,6 +12,8 @@ na VALIDAÇÃO e medidos no TESTE, para não superestimar o resultado.
 Saídas em outputs/: benchmark.md, faixas.json e a curva cobertura × precisão (csv).
 Uso: python benchmark.py
 """
+import sys as _sys
+_sys.stdout.reconfigure(encoding="utf-8")  # Windows: evita erro de cp1252 com saída redirecionada
 import json
 import time
 from pathlib import Path
@@ -83,6 +85,22 @@ def curva(conf, acerto) -> pd.DataFrame:
     return pd.DataFrame(linhas)
 
 
+def pt_br(linhas: list[str]) -> list[str]:
+    """Números no padrão brasileiro (33.485 e 0,860), sem tocar em nomes como gemini-3.5-flash nem em blocos de código."""
+    import re
+    milhar = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")
+    decimal = re.compile(r"(?<![\w\-.])(\d+)\.(\d+)(?![\w\-])")
+    saida, em_codigo = [], False
+    for linha in linhas:
+        for parte in linha.split("\n"):
+            if parte.startswith("```"):
+                em_codigo = not em_codigo
+        if not em_codigo and not linha.startswith("```"):
+            linha = decimal.sub(r"\1,\2", milhar.sub("§", linha)).replace("§", ".")
+        saida.append(linha)
+    return saida
+
+
 def main() -> None:
     d, tr, va, te = dividir()
     res, md = {}, ["# Benchmark de classificadores — Dataset 2", "",
@@ -128,7 +146,10 @@ def main() -> None:
     # --- C: LLM na amostra de 400 (comparação justa com A e B na MESMA amostra) ---
     md += ["", "## 2. Amostra de 400 tickets do teste (comparação com LLM)", "",
            "| Modelo | n | Acurácia | F1-macro | Tokens/ticket (entrada+saída) | Segundos/ticket |", "|---|---|---|---|---|---|"]
-    for arq in sorted(CACHE.glob("llm_*.jsonl")):
+    # Respostas do LLM: as versionadas (evidência) têm prioridade; o cache local só complementa
+    respostas = {a.name: a for a in sorted(CACHE.glob("llm_*.jsonl"))}
+    respostas.update({a.name: a for a in sorted((OUT / "llm_respostas").glob("llm_*.jsonl"))})
+    for arq in respostas.values():
         L = pd.DataFrame([json.loads(l) for l in arq.read_text(encoding="utf-8").splitlines()]).drop_duplicates("id").set_index("id")
         ids = L.index.intersection(te.index)
         y = te.loc[ids, "Topic_group"]
@@ -166,6 +187,8 @@ def main() -> None:
 
     # --- Faixas de automação ---
     md += ["", "## 3. Faixas de automação (limiares escolhidos na validação, medidos no teste)", "",
+           "> Esta seção compara A × B com um **limiar global e sem travas**. O motor que roda no protótipo usa limiar por "
+           "categoria e travas de domínio: os **números oficiais** (65,5% automático com 96,4% de acerto) estão em `motor_final.md`.", "",
            f"Regra: **auto** quando a 1ª categoria acerta ≥ {PRECISAO_AUTO:.0%}; **sugere** (humano escolhe entre 2) quando a certa está entre as 2 primeiras ≥ {TOP2_SUGERE:.0%}; abaixo disso, **humano** classifica do zero.", "",
            "| Modelo | Limiares (auto / sugere) | Auto: cobertura · precisão | Sugere: cobertura · precisão · top-2 | Humano: cobertura · precisão do modelo |",
            "|---|---|---|---|---|"]
@@ -189,8 +212,15 @@ def main() -> None:
     cm = pd.crosstab(te["Topic_group"], res[melhor]["pred"], rownames=["real"], colnames=["previsto"])
     md += ["", "### Matriz de confusão", "", cm.to_markdown()]
 
-    (OUT / "benchmark.md").write_text("\n".join(md), encoding="utf-8")
-    (OUT / "faixas.json").write_text(json.dumps(todas_faixas, indent=2), encoding="utf-8")
+    md = pt_br(md)
+    # Não sobrescreve a evidência oficial com uma rodada incompleta (ex.: sem embeddings)
+    completo = "B" in res and len(respostas) >= 4
+    destino = OUT / ("benchmark.md" if completo else "benchmark_parcial.md")
+    if not completo:
+        md.insert(1, "> ⚠️ Rodada PARCIAL (faltam embeddings ou respostas do LLM). O resultado oficial está em `benchmark.md`.\n")
+    destino.write_text("\n".join(md), encoding="utf-8")
+    if completo:
+        (OUT / "faixas.json").write_text(json.dumps(todas_faixas, indent=2), encoding="utf-8")
     print("\n".join(md))
 
 

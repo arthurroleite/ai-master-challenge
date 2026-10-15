@@ -7,6 +7,8 @@ limiar por categoria + travas de domínio + política.
     python benchmark/avaliar_motor.py      (a partir de solution/03-prototipo)
 Saída: benchmark/outputs/motor_final.md
 """
+import sys as _sys
+_sys.stdout.reconfigure(encoding="utf-8")  # Windows: evita erro de cp1252 com saída redirecionada
 import sys
 from pathlib import Path
 
@@ -46,6 +48,15 @@ def main() -> None:
     for f, nome in [("auto", "Automático"), ("sugere", "Sugestão (humano escolhe entre 2)"), ("humano", "Humano")]:
         g = r[r["faixa"] == f]
         L.append(f"| {nome} | {pct(len(g) / len(r))} | {pct(g['ok'].mean())} | {pct(g['ok2'].mean())} |")
+    hum = r[r["faixa"] == "humano"]
+    L += ["", "**Por que um ticket vai para humano:**", "", "| Motivo | % de todos os tickets | O modelo acertaria | Sem as travas, iria para |",
+          "|---|---|---|---|"]
+    for mot, g in hum.groupby("motivo_humano"):
+        destino = ", ".join(f"{k} {pct(v)}" for k, v in g["faixa_sem_travas"].value_counts(normalize=True).items())
+        L.append(f"| {mot} | {pct(len(g) / len(r))} | {pct(g['ok'].mean())} | {destino} |")
+    L += ["", "A trava de domínio troca cobertura por segurança: ela também barra tickets normais, porém atípicos "
+          "(pouco parecidos com o histórico), que o modelo acertaria na maioria das vezes. É o custo de não deixar "
+          "passar tickets de outro domínio (seção 3)."]
     lo, hi = bootstrap_ic(r.loc[r["faixa"] == "auto", "ok"].values.astype(float))
     L += ["", f"Intervalo de confiança de 95% (bootstrap) para o acerto da faixa automática: **{pct(lo)} a {pct(hi)}**.", "",
           f"Para comparar: o modelo sem as travas acerta {pct(r['ok'].mean())} no geral.", "",

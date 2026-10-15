@@ -141,3 +141,43 @@ Código: `solution/03-prototipo/` (`app.py`, `src/triagem.py`, `src/politica.py`
 - **Rotear ≠ executar ≠ responder.** A política de "não automatizar" é por regras explícitas, não pela categoria, porque no Dataset 2 os temas sensíveis cruzam as categorias (ex.: segurança cai 41% em Hardware, 19% em Admin rights e 17% em Access). 27,7% dos tickets acionam alguma regra (a execução exige humano); 2,7% bloqueiam o rascunho por LLM (saúde/LGPD, segurança); 8,1% são escalados.
 - **As categorias não significam o que o nome diz.** Os termos mais fortes de "Administrative rights" são *outlook, upgrade, install, windows*: instalação de software. Isso ajuda a explicar a dificuldade do LLM.
 - **Motor final, no teste:** 65,5% automático (96,4% de acerto) · 23,3% sugestão (a certa está entre as 2 em 91%) · 11,2% humano.
+
+**Nota sobre o "43% × 34%":** o primeiro teste fora do domínio (43%) usava o limiar global e o texto do Dataset 1 sem o mesmo pré-processamento do Dataset 2. Com os limiares por categoria e o pré-processamento igualado, o número correto é **34,1%** sem as travas → **10,8%** com elas (`motor_final.md`). Vale o 34%.
+
+---
+
+## Fase 5 — Comparação justa com LLM, entregáveis, deploy e revisão final (2026-10-14)
+
+### 5.1 Comparação justa com LLM (pedido do juiz 2)
+- **RAG:** cada ticket vai ao LLM com os 5 tickets mais parecidos do histórico, já rotulados (o melhor cenário para o LLM). Resultado: **76,9%**.
+- **Modelo mais forte** (`gemini-3.8-flash`): **53,5%**. Parou em 200 tickets: a cota diária do plano gratuito acabou, e antes disso o `gemini-3.5-flash` deu erro 503 (sobrecarga).
+- **Referência sem LLM** (voto dos 5 vizinhos): 73,3%. O LLM com RAG pouco acrescenta ao próprio histórico.
+- **Teste pareado (McNemar):** o modelo simples (85,0%) × RAG → p = 0,0003. Os 21 tickets que só o RAG acerta sugerem testar o LLM como "segunda opinião" na faixa de sugestão (não testado).
+- **Integridade:** o LLM inventou um id numa resposta em lote (973, inexistente). Ele foi filtrado; 1 em 1.400 respostas. As respostas brutas foram versionadas como evidência.
+
+### 5.2 Entregáveis
+Proposta (`02-proposta-automacao/proposta.md`), relatório executivo (HTML + PDF), README no template e avaliação final do motor (`motor_final.md`, a fonte dos números oficiais).
+
+### 5.3 Deploy no Streamlit Cloud
+- Preparei o app para rodar sem arquivos locais: baixa os dados na 1ª execução, lê a chave do Gemini dos Secrets e usa um `requirements` sem PyTorch.
+- Testei a frio com `AppTest` numa pasta limpa: sem exceções, 86 s na 1ª carga.
+- **Mesmo assim, o deploy quebrou:** o servidor instalou o **pandas 3** (eu testara com o 2.2), e `.values[:, None]` não funciona em colunas de texto Arrow. **Lição:** o teste a frio precisa reproduzir as versões do servidor, não só a pasta limpa. Correção: `to_numpy(dtype=object)` + `pandas<3`, validada num venv novo com pandas 3.0.6. Números idênticos.
+
+### 5.4 Juiz final: reprodução a frio a partir do GitHub
+Parecer: `process-log/revisoes/fase5_final_parecer.md`. O juiz clonou a branch, seguiu o README, rodou tudo e conferiu cada número entre os documentos.
+- **Achou o mesmo bug do pandas 3 de forma independente**, ao mesmo tempo que o erro do deploy.
+- Todos os demais números se reproduzem.
+
+| Correção apontada | O que fiz |
+|---|---|
+| Pergunta "onde o fluxo trava" respondida só com recusa | Tabela literal das 3 piores e 3 melhores combinações (80 no total), com IC e **teste de permutação**: o gap observado (7,6 h) é menor que o que o acaso gera (8,1 h), p = 0,68 |
+| Faixa humana atribuída a "confiança baixa" | Decomposição gerada pelo código: 9,7% pela trava de domínio (o modelo acertaria 79%) + 1,5% por confiança baixa |
+| `benchmark.py` apagava as linhas do LLM quando rodado a frio | Lê as respostas versionadas; rodada incompleta grava `benchmark_parcial.md` |
+| Erro de codificação no Windows | `stdout` em UTF-8 nos 4 scripts |
+| JSON órfão da v1, README com links e afirmações desatualizados | JSON removido; README reescrito |
+| "Já pode ser automatizada com segurança", "provado" | "Validado em dados reais; nesta operação, retreina e começa em modo sombra" |
+| A aba de fila abria com uma amostra de 1.000 (números ≠ README) | Abre no teste inteiro: 65,5 / 23,3 / 11,2% |
+| Cruzamento dos datasets implícito; faltavam exemplos reais | Parágrafo explícito + 4 tickets reais na proposta (ex.: um alerta de domínio suspeito rotulado como Hardware) |
+| Faltava pedir uma decisão ao Diretor | Seção "O que preciso de você" no relatório |
+
+**Erro meu pego ao reler:** escrevi que os intervalos das combinações extremas "se sobrepõem", o que é falso para alguns pares. O argumento correto é o de comparações múltiplas: com 80 grupos, os extremos sempre parecem diferentes, e é por isso que o teste de permutação é o teste certo.

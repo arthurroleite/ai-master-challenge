@@ -167,10 +167,13 @@ class MotorTriagem:
         sim = 1 - self.nn.kneighbors(X, n_neighbors=1)[0].ravel()
         cob = textos.map(self.cobertura_vocab).to_numpy(dtype=float)
         lim = np.array([self.limiares[c] for c in cat])
-        faixa = np.where((sim < SIMILARIDADE_MINIMA) | (cob < COBERTURA_MINIMA), "humano",
-                         np.where(conf >= lim, "auto", np.where(conf >= self.limiar_sugere, "sugere", "humano")))
+        barrado = (sim < SIMILARIDADE_MINIMA) | (cob < COBERTURA_MINIMA)
+        faixa_modelo = np.where(conf >= lim, "auto", np.where(conf >= self.limiar_sugere, "sugere", "humano"))
+        faixa = np.where(barrado, "humano", faixa_modelo)
+        motivo = np.where(barrado, "trava de domínio", np.where(faixa == "humano", "confiança baixa", ""))
         top2 = self.clf.classes_[np.argsort(-P, 1)[:, :2]]
-        return pd.DataFrame({"categoria": cat, "confianca": conf, "faixa": faixa, "similaridade": sim,
+        return pd.DataFrame({"categoria": cat, "confianca": conf, "faixa": faixa, "motivo_humano": motivo,
+                             "faixa_sem_travas": faixa_modelo, "similaridade": sim,
                              "top2_a": top2[:, 0], "top2_b": top2[:, 1]}, index=textos.index)
 
 

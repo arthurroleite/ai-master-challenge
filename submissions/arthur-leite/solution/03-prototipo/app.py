@@ -128,7 +128,7 @@ with aba2:
     av = avaliacao_teste()
     st.markdown(f"**{len(av):,} tickets reais** que o modelo nunca viu no treino. Nada aqui é escolhido a dedo: "
                 "é o conjunto de teste inteiro, ou uma amostra aleatória dele.".replace(",", "."))
-    n = st.slider("Tamanho da fila", 200, len(av), 1000, step=100)
+    n = st.slider("Tamanho da fila (padrão: o conjunto de teste inteiro, que gera os números oficiais)", 200, len(av), len(av), step=100)
     semente = st.number_input("Semente da amostra", 0, 9999, 0)
     f = av.sample(n, random_state=int(semente))
 
@@ -169,6 +169,7 @@ Antes de apontar onde o fluxo trava, testei se os dados de operação (Dataset 1
 
 | O que testei | Resultado |
 |---|---|
+| **Onde o fluxo trava?** (as 80 combinações canal × prioridade × tipo) | A "pior" parece 7,6 h mais lenta que a "melhor", mas o acaso sozinho produz em média 8,1 h de diferença (permutação p = 0,68). **Nenhuma combinação se distingue do ruído**, e as "melhores" têm duração média **negativa** |
 | Os "tempos" são tempos? | São carimbos de data e hora numa janela de 27 h; em **49%** dos fechados, a resolução vem **antes** da 1ª resposta |
 | A satisfação varia com algo? | CSAT uniforme de 1 a 5; **nenhuma** variável (canal, prioridade, tipo, produto, tempo, perfil) tem efeito, e os testes detectariam 0,2 ponto |
 | As variáveis conversam entre si? | **0 de 21** pares associados; um "Billing inquiry" tem a mesma chance de ter assunto "Hardware issue" que "Payment issue" |
@@ -201,12 +202,12 @@ ticket entra
    ├─► 1. Política (regras explícitas): segurança? saúde? desligamento? aprovação? privilégio? urgência?
    │        └─ segurança → fila de Segurança + escalonamento (sobrepõe tudo)
    │
-   ├─► 2. Travas de domínio: o modelo conhece este tipo de ticket?   não → HUMANO classifica
+   ├─► 2. Travas de domínio: o modelo conhece este tipo de ticket?   não → HUMANO classifica (9,7% dos tickets)
    │
    ├─► 3. Classificador (TF-IDF + regressão logística, treinado no histórico)
    │        ├─ confiança ≥ limiar da categoria → AUTOMÁTICO (precisão medida ≥ 95%)
    │        ├─ confiança média               → SUGESTÃO: humano escolhe entre 2 (a certa está entre elas em ≥ 90%)
-   │        └─ confiança baixa               → HUMANO classifica
+   │        └─ confiança baixa               → HUMANO classifica (1,5%)
    │
    └─► 4. Na fila: agente recebe palavras-chave + tickets parecidos + rascunho (LLM, opcional)
             └─ ação sensível (aprovar, conceder, revogar) → sempre humano

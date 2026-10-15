@@ -79,6 +79,26 @@ Dos **21** pares de variáveis categóricas, **0** têm associação estatistica
 - Os 2 p-valores abaixo de 0,05 são compatíveis com o acaso em 10 testes; nenhum sobrevive à correção e os efeitos são desprezíveis (|ρ| < 0,05).
 - **Poder estatístico:** com ~692 notas por grupo (desvio-padrão 1,41), os testes detectariam uma diferença de **0,21 ponto** de CSAT entre dois grupos (80% de poder, α = 5%). Não detectar nada não é falta de amostra.
 
+### 4b. Onde o fluxo trava? A pergunta respondida ao pé da letra
+
+Duração (resolução − 1ª resposta) dos 2.769 tickets fechados, nas 80 combinações de canal × prioridade × tipo.
+
+| As 3 "piores" combinações | Média | IC95% | Tickets |
+|---|---|---|---|
+| Email · Medium · Product inquiry | 3,4 h | -0,6 a 7,5 h | 21 |
+| Chat · Low · Billing inquiry | 3,3 h | 1,1 a 5,4 h | 35 |
+| Chat · High · Refund request | 3,0 h | -0,3 a 6,2 h | 41 |
+
+| As 3 "melhores" combinações | Média | IC95% | Tickets |
+|---|---|---|---|
+| Email · Critical · Product inquiry | -4,1 h | -7,0 a -1,3 h | 40 |
+| Social media · Medium · Cancellation request | -3,4 h | -6,7 a -0,1 h | 25 |
+| Chat · Medium · Technical issue | -3,2 h | -6,3 a -0,2 h | 30 |
+
+- A "pior" combinação parece **7,6 h mais lenta** que a "melhor". Mas, embaralhando as durações ao acaso entre os tickets, a diferença entre a pior e a melhor combinação fica em média em **8,1 h**: o gap observado não supera o acaso (teste de permutação p = 0,68; Kruskal-Wallis entre as 80 combinações p = 0,37).
+- Por que alguns intervalos das extremas não se sobrepõem e ainda assim é ruído: com 80 combinações, as mais extremas *sempre* parecem diferentes (comparações múltiplas). O teste certo compara o gap observado com o que o acaso produz, e ele não passa disso. Note também que as "melhores" têm duração média **negativa**, o que é impossível numa operação real.
+- **Resposta:** com estes dados, nenhuma combinação trava o fluxo de forma distinguível do ruído. Apontar "X é o gargalo" seria escolher um número sorteado.
+
 ### 5. Conclusão e o que ainda é aproveitável
 
 **O Dataset 1 é sintético, com variáveis geradas de forma independente.** Diferenças entre grupos (tempo por prioridade, CSAT por canal etc.) estão dentro do ruído e **não devem ser usadas para diagnóstico**: produziriam números com aparência real que levariam a decisões erradas.

@@ -1,31 +1,31 @@
 # Benchmark de classificadores — Dataset 2
 
-Treino 33,485 · Validação 4,784 · Teste 9,568 (estratificado, seed 42)
+Treino 33.485 · Validação 4.784 · Teste 9.568 (estratificado, seed 42)
 
 ## 1. Teste completo
 
 | Modelo | Acurácia | F1-macro | Treino | Latência/ticket |
 |---|---|---|---|---|
-| A. TF-IDF + Regressão Logística | 0.860 | 0.860 | 29 s | 0.04 ms |
-| B. Embeddings MiniLM + Regressão Logística | 0.808 | 0.813 | 5 s | ver nota |
+| A. TF-IDF + Regressão Logística | 0,860 | 0,860 | 30 s | 0,06 ms |
+| B. Embeddings MiniLM + Regressão Logística | 0,808 | 0,813 | 6 s | ver nota |
 
 ## 2. Amostra de 400 tickets do teste (comparação com LLM)
 
 | Modelo | n | Acurácia | F1-macro | Tokens/ticket (entrada+saída) | Segundos/ticket |
 |---|---|---|---|---|---|
-| C. gemini-3.5-flash-lite_few-shot | 400 | 0.480 | 0.490 | 117 | 0.31 |
-| A na mesma amostra | 400 | 0.850 | 0.864 | 0 | <0,01 |
-| B na mesma amostra | 400 | 0.782 | 0.786 | 0 | <0,01 |
-| C. gemini-3.5-flash-lite_rag | 399 | 0.769 | 0.773 | 238 | 0.12 |
-| A na mesma amostra | 399 | 0.850 | 0.864 | 0 | <0,01 |
-| B na mesma amostra | 399 | 0.782 | 0.785 | 0 | <0,01 |
-| C. gemini-3.5-flash-lite_zero-shot | 400 | 0.440 | 0.412 | 77 | 0.09 |
-| A na mesma amostra | 400 | 0.850 | 0.864 | 0 | <0,01 |
-| B na mesma amostra | 400 | 0.782 | 0.786 | 0 | <0,01 |
-| C. gemini-3.8-flash_few-shot | 200 | 0.535 | 0.521 | 120 | 3.93 |
-| A na mesma amostra | 200 | 0.850 | 0.837 | 0 | <0,01 |
-| B na mesma amostra | 200 | 0.800 | 0.778 | 0 | <0,01 |
-| kNN-5 (voto dos 5 mais parecidos, sem LLM) | 400 | 0.733 | 0.724 | 0 | <0,01 |
+| C. gemini-3.5-flash-lite_few-shot | 400 | 0,480 | 0,490 | 117 | 0,31 |
+| A na mesma amostra | 400 | 0,850 | 0,864 | 0 | <0,01 |
+| B na mesma amostra | 400 | 0,782 | 0,786 | 0 | <0,01 |
+| C. gemini-3.5-flash-lite_rag | 399 | 0,769 | 0,773 | 238 | 0,12 |
+| A na mesma amostra | 399 | 0,850 | 0,864 | 0 | <0,01 |
+| B na mesma amostra | 399 | 0,782 | 0,785 | 0 | <0,01 |
+| C. gemini-3.5-flash-lite_zero-shot | 400 | 0,440 | 0,412 | 77 | 0,09 |
+| A na mesma amostra | 400 | 0,850 | 0,864 | 0 | <0,01 |
+| B na mesma amostra | 400 | 0,782 | 0,786 | 0 | <0,01 |
+| C. gemini-3.8-flash_few-shot | 200 | 0,535 | 0,521 | 120 | 3,93 |
+| A na mesma amostra | 200 | 0,850 | 0,837 | 0 | <0,01 |
+| B na mesma amostra | 200 | 0,800 | 0,778 | 0 | <0,01 |
+| kNN-5 (voto dos 5 mais parecidos, sem LLM) | 400 | 0,733 | 0,724 | 0 | <0,01 |
 
 **Notas de método (revisadas pelo agente juiz):**
 - O teste do LLM favorece o modelo local: texto já pré-processado (sem sintaxe), categorias dadas só pelo nome e plano gratuito do Gemini.
@@ -36,12 +36,14 @@ Treino 33,485 · Validação 4,784 · Teste 9,568 (estratificado, seed 42)
 
 ## 3. Faixas de automação (limiares escolhidos na validação, medidos no teste)
 
+> Esta seção compara A × B com um **limiar global e sem travas**. O motor que roda no protótipo usa limiar por categoria e travas de domínio: os **números oficiais** (65,5% automático com 96,4% de acerto) estão em `motor_final.md`.
+
 Regra: **auto** quando a 1ª categoria acerta ≥ 95%; **sugere** (humano escolhe entre 2) quando a certa está entre as 2 primeiras ≥ 90%; abaixo disso, **humano** classifica do zero.
 
 | Modelo | Limiares (auto / sugere) | Auto: cobertura · precisão | Sugere: cobertura · precisão · top-2 | Humano: cobertura · precisão do modelo |
 |---|---|---|---|---|
-| A | 0.71 / 0.35 | 74.2% · 95.1% | 24.1% · 61.8% · 90.3% | 1.8% · 35.5% |
-| B | 0.78 / 0.74 | 63.0% · 94.2% | 4.2% · 79.6% · 94.0% | 32.9% · 55.2% |
+| A | 0,71 / 0,35 | 74,2% · 95,1% | 24,1% · 61,8% · 90,3% | 1,8% · 35,5% |
+| B | 0,78 / 0,74 | 63,0% · 94,2% | 4,2% · 79,6% · 94,0% | 32,9% · 55,2% |
 
 ## 4. Desempenho por categoria — modelo A
 

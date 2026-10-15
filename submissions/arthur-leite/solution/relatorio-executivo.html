@@ -49,7 +49,7 @@
 
 <header>
   <div class="eyebrow">AI Master Challenge 002 · Redesign de Suporte · Arthur Leite</div>
-  <h1>Os dados atuais não mostram onde o suporte perde tempo. A triagem já pode ser automatizada com segurança.</h1>
+  <h1>Os dados atuais não mostram onde o suporte perde tempo. A triagem pode ser automatizada com segurança, começando em modo sombra.</h1>
   <p class="sub">Resposta às três perguntas do Diretor de Operações, com o grau de certeza de cada uma. Tudo é reproduzível
   por script, e cada conclusão foi revisada por um agente revisor independente que recalculou os números do zero.</p>
 </header>
@@ -58,11 +58,11 @@
   <h2>Resposta em 1 minuto</h2>
   <div class="grid3">
     <div class="q"><b>Onde estamos perdendo tempo?</b>
-      <strong>Não dá para afirmar com estes dados.</strong> A base de operação é sintética: tempos impossíveis e satisfação aleatória. O 1º gargalo é de <strong>medição</strong>. Proponho instrumentar a operação em 30 dias.</div>
+      <strong>Não dá para afirmar com estes dados.</strong> A base de operação é sintética: tempos impossíveis e satisfação aleatória. A "pior" combinação de canal × prioridade × tipo não se distingue do acaso. O 1º gargalo é de <strong>medição</strong>: proponho instrumentar a operação já na semana 0.</div>
     <div class="q"><b>O que automatizar com IA?</b>
-      <strong>A triagem.</strong> Testada em 9.568 tickets reais: <strong>65,5% roteados sozinhos com 96,4% de acerto</strong>, 23% com 2 sugestões ao agente e 11% para humano. Ações sensíveis e respostas: sempre humanas.</div>
+      <strong>A triagem.</strong> Validada em 9.568 tickets reais: <strong>65,5% roteados sozinhos com 96,4% de acerto</strong>, 23,3% com 2 sugestões ao agente e 11,2% para humano. Ações sensíveis e respostas: sempre humanas.</div>
     <div class="q"><b>Mostre que funciona</b>
-      <strong>Protótipo rodando</strong> (<em>Triage Copilot</em>): classifica, explica, aplica a política e sugere resposta. Libera <strong>~1.200 h/ano</strong> de agente no cenário base (faixa: 550 a 2.100 h), a confirmar no piloto.</div>
+      <strong>Protótipo no ar</strong> (<a href="https://ai-master-challenge-v56hxnnkz3z5z7khq8n5oz.streamlit.app/"><em>Triage Copilot</em></a>): classifica, explica, aplica a política e sugere resposta. Libera <strong>~1.200 h/ano</strong> de agente no cenário base (faixa: 550 a 2.100 h), a confirmar no piloto.</div>
   </div>
 </section>
 
@@ -74,6 +74,7 @@
     <tr><td>Os "tempos" são tempos?</td><td>São carimbos de data e hora numa janela de 27 h. Em <strong>49%</strong> dos tickets fechados, a resolução acontece <em>antes</em> da 1ª resposta.</td><td><span class="pill p-bad">inválido</span></td></tr>
     <tr><td>Algo explica a satisfação?</td><td>CSAT uniforme de 1 a 5. Canal, prioridade, tipo, produto, tempo e perfil: <strong>nenhum efeito</strong>. Os testes detectariam diferenças de 0,2 ponto.</td><td><span class="pill p-bad">ruído</span></td></tr>
     <tr><td>As variáveis se relacionam?</td><td><strong>0 de 21</strong> pares associados. "Dúvida de cobrança" tem a mesma chance de vir com assunto "hardware" ou "pagamento".</td><td><span class="pill p-bad">independentes</span></td></tr>
+    <tr><td><strong>Onde o fluxo trava?</strong> (80 combinações canal × prioridade × tipo)</td><td>A "pior" parece 7,6 h mais lenta que a "melhor", mas o acaso sozinho gera em média 8,1 h de diferença (teste de permutação p = 0,68). As "melhores" têm duração média <strong>negativa</strong>.</td><td><span class="pill p-bad">ruído</span></td></tr>
     <tr><td>O texto é real?</td><td>100% com campo não preenchido (<code>{product_purchased}</code>); 16 frases-modelo; resoluções sem sentido.</td><td><span class="pill p-bad">sintético</span></td></tr>
   </table>
   <p><strong>Por que isso importa:</strong> qualquer "gargalo por canal" ou "driver de satisfação" tirado desta base teria cara de verdade e levaria a decisões erradas. Uma análise automática padrão, feita por IA sem checagem, cairia nessa armadilha.</p>
@@ -88,12 +89,12 @@
 
 <section>
   <h2>2. O que automatizar: a triagem, em três faixas de confiança</h2>
-  <p>Provado com 47.837 tickets reais de TI (treino em 33 mil; teste em 9.568 nunca vistos).</p>
-  <div class="bar"><div style="width:65.5%;background:var(--ok)">Automático 65,5%</div><div style="width:23.3%;background:var(--warn)">Sugestão 23,3%</div><div style="width:11.2%;background:var(--bad)">Humano 11%</div></div>
+  <p>Validado com 47.837 tickets reais de TI (treino em 33 mil; teste em 9.568 nunca vistos). Os tickets do Dataset 1, de outro domínio, foram usados para testar as travas que impedem a IA de decidir sobre o que não conhece. Nesta operação, o modelo é retreinado no histórico próprio antes do modo sombra.</p>
+  <div class="bar"><div style="width:65.5%;background:var(--ok)">Automático 65,5%</div><div style="width:23.3%;background:var(--warn)">Sugestão 23,3%</div><div style="width:11.2%;background:var(--bad)">Humano 11,2%</div></div>
   <div class="grid3" style="margin-top:12px">
-    <div class="kpi"><div class="v ok">96,4%</div><div class="l">de acerto na faixa automática (IC95% de 95,9 a 96,8%). Todas as 8 categorias ≥ 95%</div></div>
+    <div class="kpi"><div class="v ok">96,4%</div><div class="l">de acerto na faixa automática (margem de 95,9 a 96,8%). Todas as 8 categorias ≥ 95%; Hardware no limite (95,1%)</div></div>
     <div class="kpi"><div class="v warn">91%</div><div class="l">das vezes, a categoria certa está entre as 2 sugeridas ao agente</div></div>
-    <div class="kpi"><div class="v">34% → 11%</div><div class="l">tickets de outro domínio que iriam para o automático, sem × com as travas</div></div>
+    <div class="kpi"><div class="v">34% → 11%</div><div class="l">tickets de outro domínio que iriam para o automático, sem × com as travas. Dos 11,2% que vão a humano, 9,7% são barrados por essas travas</div></div>
   </div>
   <h3>Por que um modelo treinado no histórico, e não um LLM, para classificar</h3>
   <table>
@@ -104,7 +105,7 @@
     <tr><td id="llm-forte">LLM mais forte (Gemini 3.8 flash) com 3 exemplos por categoria <span class="note">(n = 200, cota)</span></td><td id="llm-forte-v">54%</td></tr>
     <tr><td>LLM (Gemini flash-lite) com o nome das categorias</td><td>44%</td></tr>
   </table>
-  <p class="note">Diferenças do modelo simples para o melhor LLM testado significativas (McNemar, p = 0,0003). Teste feito no plano gratuito do Gemini, com texto já pré-processado: um LLM mais forte, com definições das categorias, provavelmente reduziria a distância.</p>
+  <p class="note">A diferença entre o modelo simples e o melhor LLM é estatisticamente significativa (p = 0,0003). Teste feito no plano gratuito do Gemini, com texto já pré-processado: um LLM mais forte, com definições das categorias, provavelmente reduziria a distância.</p>
   <p><strong>O ativo é o histórico rotulado, não o modelo.</strong> As categorias seguem convenções internas: "Administrative rights", por exemplo, é na prática instalação de software. O LLM só melhora quando recebe esse histórico, e mesmo assim não supera o modelo simples. O modelo local tem custo praticamente nulo por ticket, responde em milissegundos e não envia dados para fora. O LLM fica onde agrega: <strong>redigir rascunhos</strong> para o agente revisar.</p>
 </section>
 
@@ -158,8 +159,17 @@
     <li><strong>Domínio:</strong> o desempenho foi medido em tickets internos de TI, em inglês. Uma operação de suporte ao cliente retreina com o próprio histórico (minutos, sem GPU) e mede de novo.</li>
     <li><strong>Rótulos:</strong> o Dataset 2 tem ruído estimado de 15 a 25%; parte dos "erros" pode ser rótulo errado.</li>
     <li><strong>Travas de domínio:</strong> o limiar foi escolhido observando os mesmos tickets de outro domínio usados para avaliá-lo; o resultado (11% passando) tende a ser otimista.</li>
-    <li><strong>Política:</strong> regras por palavra-chave, sensíveis de propósito, com falsos alarmes (custam segundos).</li>
+    <li><strong>Política:</strong> regras por palavra-chave, sensíveis de propósito, com falsos alarmes (custam segundos) e variações que escapam (ex.: "last day" não aciona desligamento).</li>
     <li><strong>ROI:</strong> premissas de mercado até o piloto substituí-las por medição.</li>
+  </ul>
+</section>
+
+<section class="tldr">
+  <h2>O que preciso de você</h2>
+  <ul>
+    <li><strong>Aprovar a instrumentação (semana 0):</strong> carimbos separados de criação, 1ª resposta e resolução, mais o log de mudança de fila. Sem isso, nenhum diagnóstico de gargalo é confiável.</li>
+    <li><strong>Aprovar 4 semanas de piloto:</strong> modo sombra primeiro (a IA classifica sem rotear), depois o automático em 3 categorias. A decisão de escalar sai dos números do piloto, não destas premissas.</li>
+    <li><strong>Indicar quem é dono das regras do "não automatizar"</strong> (Segurança, RH, Financeiro), para validar e manter a política.</li>
   </ul>
 </section>
 

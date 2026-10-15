@@ -10,6 +10,8 @@ Versão 2: incorpora o parecer do agente juiz (process-log/revisoes/fase1_audito
 Rodar a partir da pasta submissions/arthur-leite:
     python solution/01-diagnostico/01_auditoria_dados.py
 """
+import sys as _sys
+_sys.stdout.reconfigure(encoding="utf-8")  # Windows: evita erro de cp1252 com saída redirecionada
 import itertools
 from pathlib import Path
 
@@ -138,6 +140,39 @@ def auditar_ds1(d: pd.DataFrame) -> list[str]:
     L += ["", f"- Os {sum(p < 0.05 for _, _, p in testes)} p-valores abaixo de 0,05 são compatíveis com o acaso em {len(testes)} testes; nenhum sobrevive à correção e os efeitos são desprezíveis (|ρ| < 0,05).",
           f"- **Poder estatístico:** com ~{n(grupo)} notas por grupo (desvio-padrão {n(sd, 2)}), os testes detectariam uma diferença de "
           f"**{n(mde, 2)} ponto** de CSAT entre dois grupos (80% de poder, α = 5%). Não detectar nada não é falta de amostra."]
+
+    # 4b. A pergunta literal do Diretor: quais combinações geram os piores tempos?
+    f = d[d["Ticket Status"] == "Closed"].assign(duracao_h=dur)
+    chaves = ["Ticket Channel", "Ticket Priority", "Ticket Type"]
+    g = f.groupby(chaves)["duracao_h"].agg(["mean", "std", "count"])
+    g["ic"] = 1.96 * g["std"] / np.sqrt(g["count"])
+    ordem = g.sort_values("mean", ascending=False)
+    amplitude = ordem["mean"].iloc[0] - ordem["mean"].iloc[-1]
+    rng = np.random.default_rng(0)
+    amplitudes_acaso = []
+    for _ in range(1000):  # embaralha as durações entre os tickets: quanto "gap" o puro acaso produz?
+        emb = f.assign(duracao_h=rng.permutation(f["duracao_h"].values)).groupby(chaves)["duracao_h"].mean()
+        amplitudes_acaso.append(emb.max() - emb.min())
+    p_perm = (np.array(amplitudes_acaso) >= amplitude).mean()
+    kw = kruskal(*[x["duracao_h"].values for _, x in f.groupby(chaves)]).pvalue
+
+    def linha(idx, row):
+        return f"| {' · '.join(idx)} | {n(row['mean'], 1)} h | {n(row['mean'] - row['ic'], 1)} a {n(row['mean'] + row['ic'], 1)} h | {int(row['count'])} |"
+
+    L += ["", "### 4b. Onde o fluxo trava? A pergunta respondida ao pé da letra", "",
+          f"Duração (resolução − 1ª resposta) dos {n(len(f))} tickets fechados, nas {len(g)} combinações de canal × prioridade × tipo.", "",
+          "| As 3 \"piores\" combinações | Média | IC95% | Tickets |", "|---|---|---|---|"]
+    L += [linha(i, r) for i, r in ordem.head(3).iterrows()]
+    L += ["", "| As 3 \"melhores\" combinações | Média | IC95% | Tickets |", "|---|---|---|---|"]
+    L += [linha(i, r) for i, r in ordem.tail(3).iloc[::-1].iterrows()]
+    L += ["", f"- A \"pior\" combinação parece **{n(amplitude, 1)} h mais lenta** que a \"melhor\". Mas, embaralhando as durações "
+          f"ao acaso entre os tickets, a diferença entre a pior e a melhor combinação fica em média em **{n(np.mean(amplitudes_acaso), 1)} h**: "
+          f"o gap observado não supera o acaso (teste de permutação p = {n(p_perm, 2)}; Kruskal-Wallis entre as {len(g)} combinações p = {n(kw, 2)}).",
+          "- Por que alguns intervalos das extremas não se sobrepõem e ainda assim é ruído: com 80 combinações, as mais extremas "
+          "*sempre* parecem diferentes (comparações múltiplas). O teste certo compara o gap observado com o que o acaso produz, "
+          "e ele não passa disso. Note também que as \"melhores\" têm duração média **negativa**, o que é impossível numa operação real.",
+          "- **Resposta:** com estes dados, nenhuma combinação trava o fluxo de forma distinguível do ruído. "
+          "Apontar \"X é o gargalo\" seria escolher um número sorteado."]
 
     L += ["", "### 5. Conclusão e o que ainda é aproveitável", "",
           "**O Dataset 1 é sintético, com variáveis geradas de forma independente.** Diferenças entre grupos (tempo por prioridade, "

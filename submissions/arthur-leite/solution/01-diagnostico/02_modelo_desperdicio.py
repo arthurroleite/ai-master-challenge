@@ -14,6 +14,8 @@ Versão 2: incorpora o parecer do juiz (process-log/revisoes/fase3_benchmark_roi
 Rodar a partir da pasta submissions/arthur-leite:
     python solution/01-diagnostico/02_modelo_desperdicio.py
 """
+import sys as _sys
+_sys.stdout.reconfigure(encoding="utf-8")  # Windows: evita erro de cp1252 com saída redirecionada
 import sys
 from pathlib import Path
 
