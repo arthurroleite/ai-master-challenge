@@ -503,4 +503,5 @@ ticket entra
 - Travas de domínio: o limiar foi escolhido observando os mesmos tickets de outro domínio usados para avaliá-lo; o resultado tende a ser otimista.
 - As regras da política são por palavra-chave: alta sensibilidade de propósito, mas com falsos positivos (custam segundos de um humano) e variações que escapam (ex.: "last day" não aciona desligamento).
 - O ROI usa premissas de mercado, porque os tempos do Dataset 1 são sintéticos. Os números reais vêm do piloto.
+- O motor é retreinado quando o app sobe. Em outro sistema operacional ou com outras versões das bibliotecas, os números podem variar em até 0,1 ponto (ex.: 65,6% × 65,5% no automático). Os valores oficiais estão em `motor_final.md`.
 """)

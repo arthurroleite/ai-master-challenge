@@ -86,7 +86,7 @@ O ganho estimado é de **~1.200 h/ano (~100 h/mês) de agente no cenário base**
 
 ### Como rodar
 
-**Protótipo no ar:** https://ai-master-challenge-v56hxnnkz3z5z7khq8n5oz.streamlit.app/ (na 1ª visita após inatividade, ele pode levar 1 a 2 minutos para acordar).
+**Protótipo no ar:** https://ai-master-challenge-v56hxnnkz3z5z7khq8n5oz.streamlit.app/ (na 1ª visita após inatividade, ele pode levar 1 a 2 minutos para acordar). O app retreina o motor ao subir. No Linux do Streamlit Cloud, diferenças numéricas das bibliotecas mudam os números em até 0,1 ponto (65,6% automático com 96,3% de acerto; 1.219 h/ano). Os números deste README vêm do treino reprodutível local (`motor_final.md`).
 
 **Localmente** (todos os comandos a partir de `submissions/arthur-leite/solution/03-prototipo`):
 ```bash

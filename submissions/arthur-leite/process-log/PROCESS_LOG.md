@@ -246,6 +246,8 @@ A 1ª execução do juiz caiu por limite de uso da API antes de gravar o relató
 
 **Bug encontrado depois do juiz (pela IA, ao refazer os screenshots):** a calculadora de ROI fazia `cen.volume_ano = p.volume_ano` no dicionário global `CENARIOS`. Como o módulo é compartilhado entre as sessões do Streamlit, um visitante que mudasse "Tickets por ano" alterava os cenários do painel de todos os outros. Corrigido com `dataclasses.replace` (cópia). O `teste_app.py` ganhou uma checagem que **falha no código antigo e passa no novo** (verificado nos dois sentidos). Na mesma aba, os números passaram ao formato brasileiro. Também troquei "pode ser automatizada com segurança" por "com travas de segurança" no título do painel e do relatório.
 
+**Verificação no ar (aba anônima, Arthur, depois do reboot do app):** o painel novo subiu. Conferindo os números, a IA notou que o Cloud mostra 65,6% / 96,3% / 1.219 h, contra 65,5% / 96,4% / 1.218 h nos documentos. Localmente o treino é determinístico: do zero sai idêntico ao cache, com os mesmos limiares. A diferença vem do ambiente Linux, por diferenças numéricas das bibliotecas na borda do limiar. Não fixei versões exatas, porque isso arrisca derrubar o deploy. A variação ficou declarada no README e na aba Metodologia.
+
 **Screenshots do protótipo refeitos** com a interface final: `01`–`06` (painel, faixas e o que não automatizar, prova e ROI, phishing escalado, fila real, calculadora).
 
 **Imagens do processo** (`process-log/screenshots/`, reconstituições de trechos literais):
