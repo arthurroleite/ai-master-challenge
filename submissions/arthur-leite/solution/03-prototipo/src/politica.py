@@ -10,8 +10,10 @@ rights e 17% em Access). Uma regra pela categoria deixaria passar a maior parte 
 As regras são de alta sensibilidade de propósito: um falso alarme custa segundos de um humano;
 um falso negativo (ex.: phishing tratado como rotina) custa caro.
 
-Frequências medidas no Dataset 2 (47.837 tickets) estão em REGRAS[*]["freq_ds2"]. No total, 27,7% dos tickets
+Frequências medidas no Dataset 2 (47.837 tickets) estão em REGRAS[*]["freq_ds2"]. No total, 23,4% dos tickets
 acionam ao menos uma regra (execução exige humano), 2,7% bloqueiam o rascunho por LLM e 8,1% são escalados.
+v2 (auditoria de dados): regra de privilégio sem "administrator" solto (vinha da assinatura) e
+"maternity leaver" fora de desligamento. Antes: 13,0% privilégio, 2,3% desligamento, 27,7% no total.
 """
 from __future__ import annotations
 
@@ -35,7 +37,7 @@ REGRAS = {
         "padrao": r"\b(termination|resignation|leaver|leavers|offboarding|dismissal)\b",
         "acao": "A revogação de acessos é executada por humano, com checklist.",
         "porque": "Erro aqui = ex-funcionário com acesso ou funcionário ativo bloqueado.",
-        "bloqueia_rascunho": False, "freq_ds2": "2,3% (1.080)",
+        "bloqueia_rascunho": False, "freq_ds2": "2,0% (950)",
     },
     "aprovacao_financeira": {
         "padrao": r"\b(approve|approval|approver|po|purchase order|invoice|quote|budget)\b",
@@ -44,10 +46,13 @@ REGRAS = {
         "bloqueia_rascunho": False, "freq_ds2": "10,4% (4.987)",
     },
     "privilegio": {
-        "padrao": r"\b(admin|administrator|privileges?|rights|permissions?)\b",
+        # v2 (auditoria de dados): a v1 usava "admin|administrator|rights" soltos e metade dos alertas vinha da
+        # palavra "administrator" na ASSINATURA dos e-mails (13,0% dos tickets). Agora só pedidos de acesso/privilégio.
+        "padrao": r"\b(admin rights|administrator rights|administrative rights|admin access|administrator access|"
+                  r"local admin|elevated|privileges?|permissions?|grant access|access rights)\b",
         "acao": "Conceder privilégio exige aprovação do gestor e registro.",
         "porque": "Concessão de acesso é controle de segurança auditável.",
-        "bloqueia_rascunho": False, "freq_ds2": "13,0% (6.222)",
+        "bloqueia_rascunho": False, "freq_ds2": "3,5% (1.656)",
     },
     "urgencia_incidente": {
         "padrao": r"\b(urgent|urgently|asap|critical|immediately|outage|down|blocked|cannot work)\b",
@@ -77,6 +82,9 @@ class DecisaoPolitica:
 def avaliar(texto: str) -> DecisaoPolitica:
     t = texto.lower()
     alertas = [k for k, rx in _COMPILADAS.items() if rx.search(t)]
+    # "maternity leaver form" é licença, não desligamento: já coberto por saúde/afastamento
+    if "desligamento" in alertas and "maternity" in t:
+        alertas.remove("desligamento")
     return DecisaoPolitica(
         alertas=alertas,
         exige_humano_para_executar=bool(alertas),

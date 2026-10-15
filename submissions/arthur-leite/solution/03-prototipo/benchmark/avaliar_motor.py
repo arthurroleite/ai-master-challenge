@@ -61,10 +61,16 @@ def main() -> None:
     L += ["", f"Intervalo de confiança de 95% (bootstrap) para o acerto da faixa automática: **{pct(lo)} a {pct(hi)}**.", "",
           f"Para comparar: o modelo sem as travas acerta {pct(r['ok'].mean())} no geral.", "",
           "## 2. Faixa automática por categoria prevista", "",
-          "| Categoria | Limiar | Tickets automáticos | Acerto |", "|---|---|---|---|"]
+          "| Categoria | Limiar | Origem do limiar | Tickets automáticos | Acerto | IC95% (bootstrap) |", "|---|---|---|---|---|---|"]
     auto = r[r["faixa"] == "auto"]
+    global_auto = min(m.limiares.values())
     for c, g in auto.groupby("categoria"):
-        L.append(f"| {c} | {m.limiares[c]:.2f} | {len(g)} | {pct(g['ok'].mean())} |")
+        lo_c, hi_c = bootstrap_ic(g["ok"].to_numpy(dtype=float))
+        origem = "próprio da categoria" if m.limiares[c] > global_auto + 1e-9 else "global (validação)"
+        L.append(f"| {c} | {m.limiares[c]:.2f}".replace(".", ",") + f" | {origem} | {len(g)} | {pct(g['ok'].mean())} | {pct(lo_c)} a {pct(hi_c)} |")
+    L += ["", "Só as categorias que ficariam abaixo de 95% com o limiar global (Hardware e Miscellaneous) ganharam limiar próprio. "
+          "As demais usam o global; categorias com menos de 150 casos na validação usam o global por estabilidade. "
+          "Os acertos por categoria são estimativas pontuais: Hardware, no limite, tem intervalo que passa abaixo de 95%."]
 
     # Para onde vão sozinhos os tickets de cada categoria real (erros da faixa automática)
     err = auto[~auto["ok"]].groupby(["real", "categoria"]).size().sort_values(ascending=False).head(5)
@@ -81,6 +87,18 @@ def main() -> None:
     L += [f"| {f} | {pct((r1['faixa'] == f).mean())} |" for f in ["auto", "sugere", "humano"]]
     so_conf = (r1["confianca"] >= pd.Series([m.limiares[c] for c in r1["categoria"]], index=r1.index)).mean()
     L += ["", f"Sem as travas de domínio, **{pct(so_conf)}** desses tickets teriam ido para a faixa automática."]
+
+    # Sensibilidade da trava de similaridade: medida na VALIDAÇÃO (dentro do domínio) e no Dataset 1 (fora)
+    from src.triagem import SIMILARIDADE_MINIMA
+    _, va, _ = dividir(pd.read_csv(DADOS))
+    sim_va = m.classificar_lote(va["Document"])["similaridade"].to_numpy()
+    sim_d1 = r1["similaridade"].to_numpy()
+    L += ["", "### Sensibilidade da trava de similaridade", "",
+          f"O limiar {SIMILARIDADE_MINIMA:.2f}".replace(".", ",") + " foi escolhido por inspeção das duas distribuições, e não por otimização. "
+          "Como o Dataset 1 foi usado para escolhê-lo, o resultado fora do domínio é otimista. A tabela mostra a sensibilidade:", "",
+          "| Limiar | Tickets normais barrados (validação) | Tickets de outro domínio barrados (Dataset 1) |", "|---|---|---|"]
+    for t in [0.15, 0.20, 0.25]:
+        L.append(f"| {t:.2f}".replace(".", ",") + f" | {pct((sim_va < t).mean())} | {pct((sim_d1 < t).mean())} |")
 
     # Política no teste
     pol = te["Document"].map(avaliar)

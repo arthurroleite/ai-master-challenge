@@ -48,8 +48,10 @@ def main() -> None:
          "Revisado por agente juiz: `process-log/revisoes/fase3_benchmark_roi_parecer.md`._", "",
          "## Resposta curta", "",
          f"A triagem com IA libera entre **{n(res['Conservador']['horas_recuperaveis'])} e {n(res['Otimista']['horas_recuperaveis'])} horas "
-         f"de agente por ano** ({n(res['Conservador']['fte'], 1)} a {n(res['Otimista']['fte'], 1)} pessoa). No cenário base, são "
-         f"**{n(base['horas_recuperaveis'])} h/ano ≈ {n(base['fte'], 1)} pessoa ≈ R$ {n(base['reais_ano'])}/ano**. "
+         f"de agente por ano**, ou {n(res['Conservador']['horas_recuperaveis'] / 12)} a {n(res['Otimista']['horas_recuperaveis'] / 12)} h/mês "
+         f"({n(res['Conservador']['fte'], 1)} a {n(res['Otimista']['fte'], 1)} pessoa). No cenário base, são "
+         f"**{n(base['horas_recuperaveis'])} h/ano ≈ {n(base['horas_recuperaveis'] / 12)} h/mês ≈ {n(base['fte'], 1)} pessoa ≈ "
+         f"R$ {n(base['reais_ano'])}/ano**. "
          "É **tempo liberado bruto**, não economia de caixa, e ainda não desconta implantação e manutenção.", "",
          "## O que é medido e o que é premissa", "",
          "| Item | Valor | Tipo |", "|---|---|---|",

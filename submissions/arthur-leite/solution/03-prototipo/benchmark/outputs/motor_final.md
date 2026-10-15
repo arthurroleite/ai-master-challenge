@@ -25,16 +25,18 @@ Para comparar: o modelo sem as travas acerta 86,0% no geral.
 
 ## 2. Faixa automática por categoria prevista
 
-| Categoria | Limiar | Tickets automáticos | Acerto |
-|---|---|---|---|
-| Access | 0.71 | 1060 | 97,8% |
-| Administrative rights | 0.71 | 174 | 96,0% |
-| HR Support | 0.71 | 1569 | 95,8% |
-| Hardware | 0.78 | 1563 | 95,1% |
-| Internal Project | 0.71 | 281 | 96,4% |
-| Miscellaneous | 0.75 | 810 | 96,0% |
-| Purchase | 0.71 | 410 | 99,0% |
-| Storage | 0.71 | 401 | 97,8% |
+| Categoria | Limiar | Origem do limiar | Tickets automáticos | Acerto | IC95% (bootstrap) |
+|---|---|---|---|---|---|
+| Access | 0,71 | global (validação) | 1060 | 97,8% | 97,0% a 98,7% |
+| Administrative rights | 0,71 | global (validação) | 174 | 96,0% | 92,5% a 98,9% |
+| HR Support | 0,71 | global (validação) | 1569 | 95,8% | 94,8% a 96,7% |
+| Hardware | 0,78 | próprio da categoria | 1563 | 95,1% | 94,0% a 96,2% |
+| Internal Project | 0,71 | global (validação) | 281 | 96,4% | 94,3% a 98,6% |
+| Miscellaneous | 0,75 | próprio da categoria | 810 | 96,0% | 94,7% a 97,3% |
+| Purchase | 0,71 | global (validação) | 410 | 99,0% | 98,0% a 99,8% |
+| Storage | 0,71 | global (validação) | 401 | 97,8% | 96,3% a 99,0% |
+
+Só as categorias que ficariam abaixo de 95% com o limiar global (Hardware e Miscellaneous) ganharam limiar próprio. As demais usam o global; categorias com menos de 150 casos na validação usam o global por estabilidade. Os acertos por categoria são estimativas pontuais: Hardware, no limite, tem intervalo que passa abaixo de 95%.
 
 **Principais erros automáticos (real → previsto):** Hardware → HR Support: 26; Administrative rights → Hardware: 22; HR Support → Hardware: 20; Miscellaneous → HR Support: 17; Hardware → Miscellaneous: 15
 
@@ -50,17 +52,27 @@ Um modelo de TI interna recebendo tickets de clientes de produto deveria percebe
 
 Sem as travas de domínio, **34,1%** desses tickets teriam ido para a faixa automática.
 
+### Sensibilidade da trava de similaridade
+
+O limiar 0,20 foi escolhido por inspeção das duas distribuições, e não por otimização. Como o Dataset 1 foi usado para escolhê-lo, o resultado fora do domínio é otimista. A tabela mostra a sensibilidade:
+
+| Limiar | Tickets normais barrados (validação) | Tickets de outro domínio barrados (Dataset 1) |
+|---|---|---|
+| 0,15 | 1,7% | 36,4% |
+| 0,20 | 10,4% | 80,1% |
+| 0,25 | 24,0% | 95,7% |
+
 ## 4. Política no conjunto de teste
 
-- 27,9% dos tickets têm uma ação que exige humano
+- 23,4% dos tickets têm uma ação que exige humano
 - 2,7% bloqueiam o rascunho por LLM
 - 7,9% são escalados
 
 | Regra | Tickets |
 |---|---|
-| Privilégio de acesso | 1265 |
 | Aprovação financeira | 1009 |
 | Urgência / indisponibilidade | 710 |
-| Desligamento | 216 |
+| Privilégio de acesso | 335 |
 | Saúde / afastamento | 194 |
+| Desligamento | 189 |
 | Segurança | 70 |

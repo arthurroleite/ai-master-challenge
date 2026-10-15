@@ -173,13 +173,20 @@ def main() -> None:
     tr_k = pd.concat([tr, va])  # o modo rag busca vizinhos em todo o conjunto não-teste
     nn = NearestNeighbors(n_neighbors=5, metric="cosine").fit(vec_k.fit_transform(tr_k["Document"]))
     viz = nn.kneighbors(vec_k.transform(amostra["Document"]))[1]
-    voto = [tr_k["Topic_group"].iloc[v].mode()[0] for v in viz]
+    def votar(rotulos: list[str]) -> str:
+        """Maioria; empate resolvido pelo vizinho MAIS PRÓXIMO (a v1 usava ordem alfabética: 73,3% → 76,0%)."""
+        contagem = pd.Series(rotulos).value_counts()
+        empatados = set(contagem[contagem == contagem.max()].index)
+        return next(r for r in rotulos if r in empatados)
+
+    voto = [votar(list(tr_k["Topic_group"].iloc[v])) for v in viz]
     md.append(f"| kNN-5 (voto dos 5 mais parecidos, sem LLM) | {len(amostra)} | {accuracy_score(amostra['Topic_group'], voto):.3f} | "
               f"{f1_score(amostra['Topic_group'], voto, average='macro'):.3f} | 0 | <0,01 |")
     md += ["", "**Notas de método (revisadas pelo agente juiz):**",
            "- O teste do LLM favorece o modelo local: texto já pré-processado (sem sintaxe), categorias dadas só pelo nome e plano gratuito do Gemini.",
            "- `rag` = cada ticket vai ao LLM com os 5 tickets de treino mais parecidos, já rotulados (o melhor cenário testado para o LLM). "
-           "Um id não voltou na resposta de um lote (399/400): o LLM não garante devolver todos os ids.",
+           "Num lote, o LLM devolveu um id truncado (973 em vez de, provavelmente, 9735); a resposta foi descartada (399/400). O LLM não garante devolver os ids intactos.",
+           "- O kNN-5 desempata pelo vizinho mais próximo. Ele fica praticamente empatado com o LLM + RAG: o LLM, recebendo o histórico, quase nada acrescenta ao próprio histórico.",
            "- `gemini-3.8-flash` (o modelo mais forte disponível) parou em 200 tickets por cota diária do plano gratuito; o modelo A foi comparado nos mesmos 200.",
            "- Diferenças pareadas (teste de McNemar, mesmos tickets): A × rag → A acerta 53 que o LLM erra e erra 21 que o LLM acerta (p = 0,0003); "
            "A × 3.8-flash → 70 × 7 (p < 10⁻¹³). Os 21 acertos exclusivos do rag sugerem testar o LLM como 'segunda opinião' na faixa de sugestão (não testado).",

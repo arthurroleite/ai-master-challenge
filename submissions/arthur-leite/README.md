@@ -13,10 +13,10 @@
 
 ## Executive Summary
 
-Antes de diagnosticar, testei se os dados aguentavam um diagnóstico, e **a base de métricas (Dataset 1) é sintética**: os "tempos" caem numa janela de 27 h, metade dos tickets fechados é resolvida antes da 1ª resposta, nenhuma variável explica a satisfação e a "pior" combinação de canal × prioridade × tipo não se distingue do acaso. O primeiro gargalo é de **medição**.
-Com os 48 mil tickets reais do Dataset 2, construí e medi uma **triagem com três faixas de confiança**: **65,5% roteados sozinhos com 96,4% de acerto**, 23,3% com 2 sugestões ao agente e 11,2% para humano. Uma política explícita define o que **nunca** automatizar (rotear ≠ executar ≠ responder).
-Um classificador simples treinado no histórico **superou o LLM em todas as configurações testadas**: **o ativo é o histórico rotulado da empresa.** O LLM ficou onde agrega, na redação de rascunhos.
-O ganho estimado é de **~1.200 h/ano de agente no cenário base (faixa de 550 a 2.100 h)**. A recomendação é instrumentar a operação e rodar 4 semanas de piloto em modo sombra antes de qualquer decisão financeira.
+Antes de diagnosticar, auditei os dados: **a base de métricas (Dataset 1) é sintética**. Os tempos são impossíveis, a satisfação é aleatória e a "pior" combinação de canal × prioridade × tipo não se distingue do acaso, então o primeiro gargalo é de **medição**.
+Com 48 mil tickets reais (Dataset 2), construí e medi uma **triagem em três faixas**: **65,5% roteados sozinhos com 96,4% de acerto**, 23,3% com 2 sugestões ao agente e 11,2% para humano, sob uma política explícita do que **nunca** automatizar.
+Um classificador simples treinado no histórico **superou todas as variantes de LLM testadas** (85% × 77% no melhor caso): **o ativo é o histórico rotulado da empresa.**
+O ganho estimado é de **~1.200 h/ano (~100 h/mês) de agente no cenário base**, e a recomendação é instrumentar a operação e rodar 4 semanas de piloto em modo sombra antes de decidir.
 
 ---
 
@@ -52,20 +52,20 @@ O ganho estimado é de **~1.200 h/ano de agente no cenário base (faixa de 550 a
 | Os tempos são tempos? | Janela de 27 h; resolução antes da 1ª resposta em 49% dos fechados |
 | As variáveis se relacionam? | 0 de 21 pares associados; o texto não prevê nem o assunto (6,4% × 6,8% do chute) |
 | "67% não fechados" é backlog? | **Não**: os 3 status são equiprováveis (p = 0,33), ou seja, sorteio |
-| **Quanto estamos desperdiçando?** | Não mensurável com tempos falsos. Por premissa explícita: a triagem consome ~1.500 h/ano (cenário base), das quais a IA libera ~1.218 h |
+| **Quanto estamos desperdiçando?** | Não mensurável com tempos falsos. Por premissa explícita, a triagem consome ~1.500 h/ano (cenário base), das quais a IA libera ~1.218 h/ano (~101 h/mês; faixa de 46 a 175 h/mês). Esse é o maior desperdício recuperável mensurável; a espera do cliente na fila errada, provavelmente maior, só se mede com a instrumentação |
 
 **Automação** (Dataset 2, teste com 9.568 tickets nunca vistos):
 
 | Faixa | % | Acerto |
 |---|---|---|
-| Automático | 65,5% | 96,4% (IC95% de 95,9 a 96,8%); todas as categorias ≥ 95% (Hardware no limite, 95,1%) |
+| Automático | 65,5% | 96,4% (IC95% de 95,9 a 96,8%); as 8 categorias ≥ 95% como estimativa pontual (Hardware no limite: 95,1%, IC de 94,0 a 96,2%) |
 | Sugestão (agente escolhe entre 2) | 23,3% | a certa está entre as 2 em 91,0% |
 | Humano | 11,2% | 9,7% barrados pela trava de domínio + 1,5% por confiança baixa |
 | Tickets de outro domínio (Dataset 1) | — | 34% iriam para o automático sem as travas; 11% com elas |
 
-**Classificação: modelo simples × LLM** (mesma amostra de 400 tickets): TF-IDF + regressão logística 85,0% (86,0% no teste completo) · LLM com os 5 tickets mais parecidos no prompt (RAG) 76,9% · kNN 73,3% · LLM mais forte com exemplos 53,5% (n = 200) · LLM zero-shot 44,0%. Diferença pareada para o melhor LLM: McNemar p = 0,0003.
+**Classificação: modelo simples × LLM** (mesma amostra de 400 tickets): TF-IDF + regressão logística 85,0% (86,0% no teste completo) · LLM com os 5 tickets mais parecidos no prompt (RAG) 76,9% · kNN (voto dos 5 vizinhos, sem LLM) 76,0% · LLM mais forte com exemplos 53,5% (n = 200) · LLM zero-shot 44,0%. Diferença pareada para o melhor LLM: McNemar p = 0,0003.
 
-**Política (o que não automatizar):** segurança (0,7%), saúde/afastamento (2,0%), desligamento (2,3%), aprovação financeira (10,4%), privilégio (13,0%) e urgência (7,7%). Ao todo, 27,7% dos tickets têm uma ação que exige humano. Há exemplos reais na [proposta](solution/02-proposta-automacao/proposta.md).
+**Política (o que não automatizar):** segurança (0,7%), saúde/afastamento (2,0%), desligamento (2,0%), aprovação financeira (10,4%), privilégio (3,5%) e urgência (7,7%). Ao todo, 23,4% dos tickets têm uma ação que exige humano. Há exemplos reais na [proposta](solution/02-proposta-automacao/proposta.md).
 
 ### Recomendações
 
@@ -78,8 +78,8 @@ O ganho estimado é de **~1.200 h/ano de agente no cenário base (faixa de 550 a
 ### Limitações
 
 - O desempenho foi medido em tickets internos de TI, em inglês. Esta operação precisa retreinar no próprio histórico, e a qualidade desse histórico ainda não foi verificada.
-- Os rótulos do Dataset 2 têm ruído estimado de 15 a 25%.
-- O limiar das travas de domínio foi escolhido com os mesmos dados usados para avaliá-lo (resultado otimista). A trava também barra tickets normais atípicos.
+- Os rótulos do Dataset 2 têm ruído estimado em 15 a 25% (amostra de 32 textos: ordem de grandeza, não precisão).
+- O limiar da trava de domínio (0,20) foi escolhido por inspeção, com o Dataset 1 à vista, então o resultado fora do domínio é otimista. Ele barra 10,4% dos tickets normais (validação); a sensibilidade está em `motor_final.md`.
 - A política usa palavras-chave: há falsos alarmes e variações que escapam.
 - O ROI usa premissas de mercado (a principal, de fonte fraca) até o piloto medir; é tempo liberado bruto, não caixa.
 - O LLM foi testado no plano gratuito do Gemini (sobrecarga e cota limitaram o modelo mais forte a 200 tickets).
@@ -119,6 +119,7 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 |---|---|
 | Claude Code (Claude Opus 5.5) | Agente principal: leitura do case, análise, código, protótipo, git, deploy |
 | Subagentes "juiz" (Claude Code) | Revisão adversarial independente: recalcularam do zero e reproduziram a entrega a frio a partir do GitHub |
+| Time de 5 agentes (Claude Code) | Revisão final em paralelo: designer UI/UX, auditor de dados, conformidade com a entrega, investigador de ocultos e juiz dos demais ([`process-log/agentes/`](process-log/agentes/)) |
 | Google Gemini (flash-lite, 3.8 flash) | Benchmark de classificação (zero-shot, few-shot, RAG) e rascunho de respostas no protótipo |
 | scikit-learn, sentence-transformers | Classificadores (TF-IDF, embeddings MiniLM, kNN) |
 | Streamlit (+ Streamlit Cloud) e Plotly | Protótipo e deploy |
@@ -133,6 +134,9 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 5. Protótipo construído e testado com casos de borda (phishing, outro idioma, aprovação). Cada falha virou uma trava.
 6. ROI reescrito depois do juiz: só o que é sustentável, com o resto declarado como fora.
 7. Juiz final reproduziu tudo a frio a partir do GitHub; as correções dele (incluindo um bug que quebrava o deploy) foram aplicadas e testadas num ambiente limpo.
+8. Revisão final com 5 agentes simultâneos, a pedido do Arthur, e painel do Diretor redesenhado.
+
+**Iterações:** ~3 h de sessão contínua, 4 rodadas de juiz independente + 1 time de 5 agentes, 10+ commits por fase. Nenhum resultado foi entregue na primeira versão: cada número passou por pelo menos uma revisão.
 
 ### Onde a IA errou e como corrigi
 
@@ -140,7 +144,7 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 |---|---|---|
 | Afirmei "67% de backlog real" | Juiz (status equiprováveis, p = 0,33) | Removido; virou evidência de dado sintético |
 | Omiti dois p < 0,05 na análise de CSAT | Juiz | Bateria completa com Bonferroni + poder estatístico |
-| Faixa "sugere" com 60% de precisão (usava a precisão *acumulada*) | Eu, ao ler a tabela | Precisão *dentro da faixa*; depois, critério top-2 |
+| Faixa "sugere" com 60% de precisão (usava a precisão *acumulada*) | A IA, ao ler a própria tabela | Precisão *dentro da faixa*; depois, critério top-2 |
 | ROI assumia que o erro de roteamento cairia de 15% para 7,5% | Juiz (não demonstrado; "transferência" ≠ erro de triagem) | Removido do número principal; virou hipótese opcional |
 | Comparação com LLM era um espantalho (modelo barato, sem contexto) | Juiz | Testei RAG e o modelo mais forte; a redação foi qualificada |
 | Confiança alta em ticket de outro domínio (34% passariam) | Teste fora do domínio | Travas de similaridade e de vocabulário |
@@ -149,15 +153,35 @@ python solution/03-prototipo/benchmark/benchmark.py   # usa as respostas do LLM 
 | O LLM inventou um id numa resposta em lote | Checagem de integridade | Respostas filtradas pelos ids válidos (1 em 1.400) |
 | Faixa humana atribuída a "confiança baixa" | Juiz final (9,7 dos 11,2 pontos vêm da trava) | Decomposição gerada pelo código e citada em todos os documentos |
 | **Deploy quebrou no Streamlit Cloud** (pandas 3) | Erro no deploy + juiz final, de forma independente | Código compatível com as 2 versões; testado num venv limpo com pandas 3 |
-| Escrevi que os IC das combinações extremas "se sobrepõem" | Eu, ao reler a tabela | Falso para alguns pares; o argumento certo é comparações múltiplas + permutação |
+| A IA escreveu que os IC das combinações extremas "se sobrepõem" | A IA, ao reler a tabela | Falso para alguns pares; o argumento certo é comparações múltiplas + permutação |
 | Pergunta "onde o fluxo trava" respondida só com uma recusa | Juiz final | Tabela literal das piores/melhores combinações, com o teste de ruído |
+| A IA concluiu, por `curl`, que o app publicado estava **privado** | **Arthur**, testando numa aba anônima | Era o redirecionamento de login do Streamlit, que acontece até em apps públicos |
+| Regra de "privilégio" disparava com "administrator" na **assinatura** dos e-mails (13,0% dos tickets) | Agente 2 (auditoria de dados) | Regra v2: 3,5%; total com ação humana de 27,7% → 23,4% |
+| kNN com desempate alfabético (73,3%) | Agente 2 | Desempate pelo vizinho mais próximo: 76,0%, empatado com o LLM + RAG |
+| README atribuía ao Arthur ideias que foram da IA | Agente 3 (conformidade) | Tabela "Quem fez o quê" |
 
-### O que eu adicionei que a IA sozinha não faria
+### Quem fez o quê (Arthur × IA)
 
-- **Desconfiar da base antes de analisar.** O caminho padrão (o baseline) é calcular "tempo médio por canal" sobre dados sintéticos.
-- **O desenho rotear ≠ executar ≠ responder** e a lista do que nunca automatizar, vindos de operar atendimento com IA em produção.
-- **Exigir um revisor adversarial** para cada número. Foi ele que derrubou o "backlog de 67%", o ROI inflado e um bug que quebraria o protótipo para o avaliador.
-- **Escolher entregar um ROI menor e defensável** (1.218 h no cenário base contra 1.496 h na 1ª versão) e dizer o que ficou de fora.
+A vaga pede clareza sobre o papel de cada um. A conversa completa está em [`process-log/chat-exports/`](process-log/chat-exports/) para conferência.
+
+| Etapa | Arthur | IA (Claude Code e subagentes) |
+|---|---|---|
+| Escolha do case | Decidiu pelo 002, com base na experiência de operar agentes de atendimento com IA em produção | Leu a vaga e o repo inteiro; recomendou o 002 e mostrou a concorrência por challenge |
+| Hipótese de base sintética | Validou a mudança de enquadramento ("o 1º gargalo é de medição") | **Levantou a hipótese** e fez a auditoria estatística |
+| **Rigor e verificação** | **Exigiu um juiz adversarial em cada conclusão** e fidelidade acima de "parecer inteligente". Foi isso que derrubou o backlog de 67%, o ROI inflado e o bug do deploy | Implementou o protocolo; os juízes recalcularam tudo do zero |
+| Análise, modelos, protótipo, documentos | Revisou e aprovou cada fase | Escreveu o código, os testes estatísticos, o benchmark, o app e os documentos |
+| **Verificação manual** | **Abriu os CSVs e montou tabelas dinâmicas** para checar as conclusões; revisou o app online ponto a ponto; testou em aba anônima e em mais de um monitor | — |
+| Deploy | Criou a conta, configurou o Streamlit Cloud e a chave (sem expô-la no chat) | Preparou o código para a nuvem e corrigiu o bug do pandas 3 |
+| Produto para o Diretor | **Pediu o painel inicial com storytelling** (o app abria numa tela vazia) | Redesenhou o app (agente designer) |
+| Revisão final | **Montou o time de 5 agentes** (designer, dados, conformidade, ocultos, juiz) | Executou as revisões e aplicou as correções |
+| Erro pego pelo Arthur | **A aba anônima provou que o app era público**, quando a IA tinha concluído que estava privado | A IA tinha interpretado errado o redirecionamento de login do Streamlit |
+
+### O que o humano acrescentou que a IA sozinha não faria
+
+- **Não aceitar a primeira resposta.** A IA, sozinha, entregou conclusões erradas que pareciam certas (backlog de 67%, ROI de 15% → 7,5%, regra de privilégio inflada). Quem pegou foram as revisões adversariais que o Arthur exigiu.
+- **Validar com as próprias mãos** (tabelas dinâmicas, teste anônimo) em vez de confiar no relatório da IA. Uma dessas checagens corrigiu a IA.
+- **Exigir que o produto respondesse ao Diretor**, e não só "funcionasse": o painel com storytelling.
+- **Contexto de operação real:** a escolha do case e o foco em "o que não automatizar" partem da experiência com atendimento por IA em produção.
 
 ---
 

@@ -4,7 +4,7 @@ _Gerado por `02_modelo_desperdicio.py` (mesmo cálculo do app: `03-prototipo/src
 
 ## Resposta curta
 
-A triagem com IA libera entre **552 e 2.106 horas de agente por ano** (0,3 a 1,2 pessoa). No cenário base, são **1.218 h/ano ≈ 0,7 pessoa ≈ R$ 46.563/ano**. É **tempo liberado bruto**, não economia de caixa, e ainda não desconta implantação e manutenção.
+A triagem com IA libera entre **552 e 2.106 horas de agente por ano**, ou 46 a 175 h/mês (0,3 a 1,2 pessoa). No cenário base, são **1.218 h/ano ≈ 101 h/mês ≈ 0,7 pessoa ≈ R$ 46.563/ano**. É **tempo liberado bruto**, não economia de caixa, e ainda não desconta implantação e manutenção.
 
 ## O que é medido e o que é premissa
 

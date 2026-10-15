@@ -4,7 +4,7 @@ Motor de triagem: classifica, explica e decide o nível de automação de cada t
 Decisão em camadas (a ordem importa):
   1. Trava de domínio: se o ticket não se parece com nada do histórico OU se o modelo não
      reconhece a maior parte das palavras dele, vai para humano, mesmo que o classificador diga
-     ter "certeza". Medido: a confiança sozinha deixava passar 43% dos tickets fora do domínio.
+     ter "certeza". Medido: sem as travas, 34,1% dos tickets de outro domínio (Dataset 1) iriam para o automático; com elas, 10,8%.
      A checagem de vocabulário foi incluída depois que um ticket em português, com uma única
      palavra conhecida ("status"), passou pela checagem de similaridade.
   2. Faixa de confiança por categoria, com limiares calibrados na VALIDAÇÃO:

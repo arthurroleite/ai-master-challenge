@@ -1,5 +1,7 @@
 # Process Log — Arthur Leite — Challenge 002
 
+> **Nota de autoria (leia primeiro).** Este diário foi **redigido pelo Claude Code durante a sessão**, a pedido do Arthur, e mistura vozes: frases como "pedi ao Claude Code" são do ponto de vista do Arthur; frases como "erro meu" ou "corrigi" são, em geral, da IA. A atribuição autoritativa de **quem fez o quê** está na tabela do README (seção *Process Log*) e pode ser conferida na conversa completa em `chat-exports/`. Resumo: a **IA** executou a análise, o código, os documentos e propôs a maioria das hipóteses, inclusive a de base sintética. O **Arthur** direcionou, exigiu um juiz adversarial em cada conclusão, exigiu fidelidade, pediu o painel com storytelling e o time de 5 agentes, decidiu publicar e **verificou com as próprias mãos**: tabelas dinâmicas nos CSVs, revisão ponto a ponto do app, aba anônima e mais de um monitor.
+
 Diário de trabalho, escrito durante o processo e não reconstruído no final.
 Cada entrada registra o que decidi, o papel da IA, onde a IA errou ou foi corrigida e o que mudou.
 
@@ -181,3 +183,45 @@ Parecer: `process-log/revisoes/fase5_final_parecer.md`. O juiz clonou a branch, 
 | Faltava pedir uma decisão ao Diretor | Seção "O que preciso de você" no relatório |
 
 **Erro meu pego ao reler:** escrevi que os intervalos das combinações extremas "se sobrepõem", o que é falso para alguns pares. O argumento correto é o de comparações múltiplas: com 80 grupos, os extremos sempre parecem diferentes, e é por isso que o teste de permutação é o teste certo.
+
+
+---
+
+## Fase 6 — Revisão final com 5 agentes (pedido do Arthur) e errata
+
+O Arthur pediu, antes da entrega: (a) um **painel inicial** que responda a todas as perguntas do Diretor, com storytelling (diagnóstico → automação → prova → ROI → decisão), porque o app abria numa tela de busca vazia; (b) **5 agentes simultâneos**: 1 designer UI/UX, 2 auditor de dados, 3 revisor de conformidade com a documentação de entrega, 4 investigador do que está oculto, 5 juiz dos demais. Relatórios em `process-log/agentes/`.
+
+Organização: os agentes 1 a 4 rodaram em paralelo. Só o designer altera código, e só na interface. O juiz roda depois dos quatro.
+
+### O que cada agente mudou na entrega
+- **Agente 2 (dados):** todos os números-chave conferem até a casa decimal, e os scripts reproduzem os outputs byte a byte. Problemas de método encontrados e corrigidos:
+  - **Política de privilégio inflada:** metade dos alertas vinha da palavra "administrator" na **assinatura** dos e-mails. Nova regra: 13,0% → **3,5%**. Total com ação que exige humano: 27,7% → **23,4%**. "Maternity leaver" deixou de disparar desligamento (2,3% → 2,0%).
+  - **kNN com desempate alfabético:** com o desempate pelo vizinho mais próximo, 73,3% → **76,0%**, empatado com o LLM + RAG (76,9%). Isso reforça que quem acerta é o histórico.
+  - **Trava de 0,20 escolhida a olho**, possivelmente olhando o teste: a sensibilidade agora é medida na validação e declarada (0,15 / 0,20 / 0,25).
+  - "# = linha do CSV" estava errado (é o índice começando em 0). "Limiar por categoria" foi esclarecido: só Hardware e Miscellaneous têm limiar próprio. IC por categoria: Hardware vai de 94,0% a 96,2%.
+- **Agente 3 (conformidade):**
+  - **P0: a atribuição IA × Arthur estava imprecisa.** O README punha em "o que eu adicionei" a hipótese de base sintética, que foi da IA. Corrigido com a tabela "Quem fez o quê".
+  - Também: ROI em h/mês (46 a 175; base ≈ 101), frase do "maior desperdício recuperável", ponte entre o motor de TI e as filas do Diretor, bloco de "Operação contínua" (monitoramento, kill switch, retreino, deriva, dono, adoção) e Executive Summary mais curto.
+- **Agente 4 (ocultos):**
+  - Existe uma **rubrica aplicada por uma IA** ("G4 OS — assistente de avaliação"): Leitura do problema, Qualidade do output, **Uso de IA (30%)** e Comunicação.
+  - Os avaliadores exigem **evidência visual do processo com a IA**, não só do produto, e perguntam "essa decisão foi sua ou da IA?".
+  - Repositórios reprovados tinham `node_modules`, commits com autor "Claude" ou arquivos fora da pasta. O nosso está limpo. Não há texto oculto nem armadilha para IA nos documentos.
+  - Para ler a página da vaga (uma SPA), o agente usou a consulta pública que a própria página faz. Foi só leitura, e foi registrado com transparência.
+
+### Errata (números de fases anteriores deste diário que não valem mais)
+| Onde | Dizia | Vale |
+|---|---|---|
+| Fase 1 | "mediana de duração 6,0 h (Critical) × 7,1 h (Low)" | Valor exploratório não reproduzido; a análise oficial é a tabela de combinações + permutação (`auditoria.md` §4b) |
+| Fase 4 | "a trava barra 82% dos de outro domínio e 9,5% dos normais" | 80,1% e **10,4% (validação)** / 9,7% (teste) |
+| Fase 4 | "43% dos de outro domínio passariam" | **34,1%** (ver a nota da Fase 4) |
+| Fase 3 | latência de 0,04 ms | varia entre rodadas (0,04 a 0,06 ms); irrelevante para a decisão |
+| Fase 4 | política: 27,7% exigem humano; privilégio 13,0% | **23,4%**; privilégio **3,5%** (regra v2) |
+| Fase 5 | "id 973 inexistente" | O id 973 existe no Dataset 2; o LLM **truncou** 9735. A resposta foi descartada |
+| Fase 5 | kNN 73,3% | **76,0%** (desempate corrigido) |
+| Dataset 2 | "ruído de rótulo de 15 a 25%" | Estimativa com n = 32 (intervalo real ~11 a 43%); tratar como ordem de grandeza |
+
+### Contribuições do Arthur registradas nesta fase
+- Abriu os CSVs e montou **tabelas dinâmicas** para checar se as conclusões faziam sentido.
+- Revisou o app online **ponto a ponto**.
+- Testou numa **aba anônima**, o que **corrigiu um erro da IA**: eu tinha concluído, por um `curl`, que o app estava privado. O redirecionamento para `/-/login` acontece mesmo em apps públicos.
+- Testou em **mais de um tipo de monitor**.

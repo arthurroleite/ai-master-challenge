@@ -78,7 +78,7 @@
     <tr><td>O texto é real?</td><td>100% com campo não preenchido (<code>{product_purchased}</code>); 16 frases-modelo; resoluções sem sentido.</td><td><span class="pill p-bad">sintético</span></td></tr>
   </table>
   <p><strong>Por que isso importa:</strong> qualquer "gargalo por canal" ou "driver de satisfação" tirado desta base teria cara de verdade e levaria a decisões erradas. Uma análise automática padrão, feita por IA sem checagem, cairia nessa armadilha.</p>
-  <h3>O que dá para fazer já: plano de instrumentação (30 dias)</h3>
+  <h3>O que dá para fazer já: plano de instrumentação (semana 0 do piloto)</h3>
   <ul>
     <li>Carimbos <strong>separados</strong> de criação, 1ª resposta e resolução, para medir durações reais</li>
     <li><strong>Log de cada mudança de fila</strong>, para medir reroteamento e tempo perdido na fila errada</li>
@@ -92,7 +92,7 @@
   <p>Validado com 47.837 tickets reais de TI (treino em 33 mil; teste em 9.568 nunca vistos). Os tickets do Dataset 1, de outro domínio, foram usados para testar as travas que impedem a IA de decidir sobre o que não conhece. Nesta operação, o modelo é retreinado no histórico próprio antes do modo sombra.</p>
   <div class="bar"><div style="width:65.5%;background:var(--ok)">Automático 65,5%</div><div style="width:23.3%;background:var(--warn)">Sugestão 23,3%</div><div style="width:11.2%;background:var(--bad)">Humano 11,2%</div></div>
   <div class="grid3" style="margin-top:12px">
-    <div class="kpi"><div class="v ok">96,4%</div><div class="l">de acerto na faixa automática (margem de 95,9 a 96,8%). Todas as 8 categorias ≥ 95%; Hardware no limite (95,1%)</div></div>
+    <div class="kpi"><div class="v ok">96,4%</div><div class="l">de acerto na faixa automática (margem de 95,9 a 96,8%). As 8 categorias ≥ 95% (estimativa); Hardware no limite (95,1%)</div></div>
     <div class="kpi"><div class="v warn">91%</div><div class="l">das vezes, a categoria certa está entre as 2 sugeridas ao agente</div></div>
     <div class="kpi"><div class="v">34% → 11%</div><div class="l">tickets de outro domínio que iriam para o automático, sem × com as travas. Dos 11,2% que vão a humano, 9,7% são barrados por essas travas</div></div>
   </div>
@@ -101,12 +101,12 @@
     <tr><th>Abordagem (mesma amostra de 400 tickets)</th><th>Acerto</th></tr>
     <tr class="hl"><td>Classificador simples treinado no histórico da empresa</td><td>85%</td></tr>
     <tr><td id="llm-rag">LLM (Gemini) com os 5 tickets mais parecidos do histórico no prompt</td><td id="llm-rag-v">77%</td></tr>
-    <tr><td>Voto dos 5 tickets mais parecidos (sem LLM)</td><td>73%</td></tr>
+    <tr><td>Voto dos 5 tickets mais parecidos (sem LLM)</td><td>76%</td></tr>
     <tr><td id="llm-forte">LLM mais forte (Gemini 3.8 flash) com 3 exemplos por categoria <span class="note">(n = 200, cota)</span></td><td id="llm-forte-v">54%</td></tr>
     <tr><td>LLM (Gemini flash-lite) com o nome das categorias</td><td>44%</td></tr>
   </table>
   <p class="note">A diferença entre o modelo simples e o melhor LLM é estatisticamente significativa (p = 0,0003). Teste feito no plano gratuito do Gemini, com texto já pré-processado: um LLM mais forte, com definições das categorias, provavelmente reduziria a distância.</p>
-  <p><strong>O ativo é o histórico rotulado, não o modelo.</strong> As categorias seguem convenções internas: "Administrative rights", por exemplo, é na prática instalação de software. O LLM só melhora quando recebe esse histórico, e mesmo assim não supera o modelo simples. O modelo local tem custo praticamente nulo por ticket, responde em milissegundos e não envia dados para fora. O LLM fica onde agrega: <strong>redigir rascunhos</strong> para o agente revisar.</p>
+  <p><strong>O ativo é o histórico rotulado, não o modelo.</strong> As categorias seguem convenções internas: "Administrative rights", por exemplo, é na prática instalação de software. O LLM só melhora quando recebe esse histórico, e aí empata com o simples voto dos 5 tickets mais parecidos: quem acerta é o histórico. O modelo local tem custo praticamente nulo por ticket, responde em milissegundos e não envia dados para fora. O LLM fica onde agrega: <strong>redigir rascunhos</strong> para o agente revisar.</p>
 </section>
 
 <section>
@@ -115,12 +115,12 @@
     <tr><th>Situação</th><th>% dos tickets</th><th>Regra</th></tr>
     <tr><td><strong>Segurança</strong> (phishing, malware)</td><td>0,7%</td><td>Fila de Segurança + escalonamento, <strong>sobrepondo o classificador</strong></td></tr>
     <tr><td><strong>Saúde / afastamento</strong></td><td>2,0%</td><td>Só o RH responde; <strong>sem LLM</strong> (dado sensível, LGPD art. 11)</td></tr>
-    <tr><td><strong>Desligamento</strong></td><td>2,3%</td><td>Revogação de acessos por humano, com checklist</td></tr>
+    <tr><td><strong>Desligamento</strong></td><td>2,0%</td><td>Revogação de acessos por humano, com checklist</td></tr>
     <tr><td><strong>Aprovação financeira</strong></td><td>10,4%</td><td>A IA prepara; a aprovação é humana</td></tr>
-    <tr><td><strong>Privilégio de acesso</strong></td><td>13,0%</td><td>Concessão com aprovação do gestor e registro</td></tr>
+    <tr><td><strong>Privilégio de acesso</strong></td><td>3,5%</td><td>Concessão com aprovação do gestor e registro</td></tr>
     <tr><td><strong>Urgência / indisponibilidade</strong></td><td>7,7%</td><td>Prioridade sobe e o plantão é notificado</td></tr>
   </table>
-  <p class="note">27,7% dos tickets acionam ao menos uma regra. As regras são explícitas, e não baseadas na categoria, porque os temas sensíveis atravessam as categorias: as menções a segurança se dividem entre Hardware (41%), Admin (19%) e Access (17%).</p>
+  <p class="note">23,4% dos tickets acionam ao menos uma regra. As regras são explícitas, e não baseadas na categoria, porque os temas sensíveis atravessam as categorias: as menções a segurança se dividem entre Hardware (41%), Admin (19%) e Access (17%).</p>
 </section>
 
 <section>
@@ -141,6 +141,7 @@
     <div class="kpi"><div class="v ok">1.218 h</div><div class="l"><strong>base</strong> (3 min/ticket) · 0,7 pessoa · R$ 47 mil/ano</div></div>
     <div class="kpi"><div class="v">2.106 h</div><div class="l">otimista (5 min/ticket) · 1,2 pessoa · R$ 81 mil/ano</div></div>
   </div>
+  <p class="note">Em base mensal: de 46 a 175 h/mês (base ≈ 101 h/mês ≈ R$ 3,9 mil/mês). <strong>Maior desperdício recuperável mensurável:</strong> o tempo de triagem manual, dos quais a IA libera ~80%. O maior de todos, a espera do cliente na fila errada, só será medido com a instrumentação.</p>
   <p class="note">É <strong>tempo de agente liberado</strong>, não economia de caixa, e ainda não desconta implantação e manutenção. Volume: 30 mil tickets/ano. Custo/hora: R$ 38 (salário + encargos, salario.com.br, out/2026). O resultado depende quase só de uma premissa de fonte fraca (minutos de triagem hoje).
   <strong>Ficam fora, de propósito:</strong> o tempo de espera do cliente na fila errada (provavelmente o maior ganho), a redução de reroteamento (não demonstrada) e os rascunhos.</p>
   <h3>Piloto de 4 semanas</h3>
